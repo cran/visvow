@@ -1,10 +1,8 @@
-visvowref <- bibentry(bibtype = "InCollection",
-  year      = "2017",
-  author    = "W. Heeringa and H. Van de Velde",
-  title     = "Visible Vowels: a Tool for the Visualization of Vowel Variation",
-  booktitle = "Proceedings of the 18th Annual Conference of the International Speech Communication Association (Interspeech 2017), August 20-24, 2017, Stockholm, Sweden",
-  publisher = "ISCA",
-  pages     = "4034-4035",
-  note      = "Paper number 2055",
-  url       = "http://www.isca-speech.org/archive/Interspeech_2017/pdfs/2055.PDF"
-)
+visvowref <- bibentry(bibtype   = "InCollection",
+                      year      = "2018",
+                      author    = "Wilbert Heeringa and Hans Van de Velde",
+                      title     = "Visible Vowels: a Tool for the Visualization of Vowel Variation",
+                      booktitle = "Proceedings CLARIN Annual Conference 2018, 8 - 10 October, Pisa, Italy",
+                      publisher = "CLARIN ERIC",
+                      pages     = "",
+                      url       = "")

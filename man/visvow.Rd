@@ -8,17 +8,35 @@ visvow()
 }
 \description{
 Visible Vowels is an app that visualizes vowel variation in f0, F1, F2, F3 and duration.
+
+A vowel is a speech sound produced without audible impediment to the airflow in the mouth and/or throat.
+Each vowel has a particular pitch (except when whispered), quality (timbre) and duration.
+f0 is the fundamental frequency of the periodic waveform and determines the perceived pitch.
+The quality is determined by the formants.
+Formants are resonance frequencies that define the spectral shape of vowels (and vowel-like sounds).
+The formant with the lowest frequency is called F1, the second-lowest F2, and the third F3.
+F1 is correlated with tongue height.
+The closer the tongue approaches the palate, the lower F1.
+F2 correlates with tongue retraction and lip protrusion.
+The more the tongue is positioned towards the front of the mouth, and the wider the lips are spread, the higher F2.
+F3 correlates with the tongue-blade position.
+The closer the blade is to the lips, the higher is F3.
+The acoustic vowel duration primarily corresponds with the perceived duration of a vowel sound.
+See Johnson (2012).
 }
 \details{
 \code{visvow()} opens Visible Vowels in your default web browser.
 }
 \examples{
-visvow
+if (interactive()){
+  visvow()
+}
 
 }
 \references{
-\insertRef{visvow:2017}{visvow}
+\insertRef{johnson:2012}{visvow}
 }
 \seealso{
 The Help tab in the app provides more information about the format of the input file.
+Details about conversion and normalization procedures and some specific metrics are found in the vignette.
 }
