@@ -4,5 +4,5 @@ visvowref <- bibentry(bibtype   = "InCollection",
                       title     = "Visible Vowels: a Tool for the Visualization of Vowel Variation",
                       booktitle = "Proceedings CLARIN Annual Conference 2018, 8 - 10 October, Pisa, Italy",
                       publisher = "CLARIN ERIC",
-                      pages     = "",
-                      url       = "")
+                      pages     = "120 - 123",
+                      url       = "https://office.clarin.eu/v/CE-2018-1292-CLARIN2018_ConferenceProceedings.pdf")

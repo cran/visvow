@@ -1219,6 +1219,7 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>base</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shiny</span>"),p("Winston Chang, Joe Cheng, J.J. Allaire, Yihui Xie and Jonathan McPherson (2017). shiny: Web Application Framework for R. R package version 1.0.0. https://CRAN.R-project.org/package=shiny"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shinyBS</span>"),p("Eric Bailey (2015). shinyBS: Twitter Bootstrap Components for Shiny. R package version 0.61. https://CRAN.R-project.org/package=shinyBS"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>stats</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>ggplot2</span>"),p("H. Wickham (2009). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York. http://ggplot2.org"))),
               tags$li(tags$span(HTML("<span style='color:blue'>plot3D</span>"),p("Karline Soetaert (2017). plot3D: Plotting Multi-Dimensional Data. R package version 1.1.1. https://CRAN.R-project.org/package=plot3D"))),
               tags$li(tags$span(HTML("<span style='color:blue'>MASS</span>"),p("W.N. Venables & B.D. Ripley (2002). Modern Applied Statistics with S. Fourth Edition. Springer, New York. ISBN 0-387-95457-0"))),
@@ -3138,7 +3139,7 @@ visvow <- function()
           }
           else
           {
-            Hull <- element_blank()
+            Hull <- geom_blank()
           }
 
           if (input$geon4)
@@ -3160,7 +3161,7 @@ visvow <- function()
           }
           else
           {
-            Spokes <- element_blank()
+            Spokes <- geom_blank()
           }
 
           if ((input$geon5) & length(input$replyLevel)>0)
@@ -3172,7 +3173,7 @@ visvow <- function()
           }
           else
           {
-            Ellipse <- element_blank()
+            Ellipse <- geom_blank()
           }
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
