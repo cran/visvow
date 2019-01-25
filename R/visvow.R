@@ -1997,7 +1997,7 @@ visvow <- function()
           if (is.element("points", input$selGeon0))
             Geom_Point <- geom_point(colour="indianred2", size=3)
           else
-            Geom_Point <- element_blank()
+            Geom_Point <- geom_point(colour="indianred2", size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=1)) +
                          geom_line(data=vS, colour="indianred2", size=1) +
@@ -2040,7 +2040,7 @@ visvow <- function()
           if (is.element("points", input$selGeon0))
             Geom_Point <- geom_point(colour="indianred2", size=3)
           else
-            Geom_Point <- element_blank()
+            Geom_Point <- geom_point(colour="indianred2", size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=1)) +
                          geom_line(data=vS, colour="indianred2", size=1) +
@@ -2084,7 +2084,7 @@ visvow <- function()
           if (is.element("points", input$selGeon0))
             Geom_Point <- geom_point(size=3)
           else
-            Geom_Point <- element_blank()
+            Geom_Point <- geom_point(size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=l, color=l)) +
                          geom_line(data=vS, size=1) +
@@ -2138,7 +2138,7 @@ visvow <- function()
           if (is.element("points", input$selGeon0))
             Geom_Point <- geom_point(size=3)
           else
-            Geom_Point <- element_blank()
+            Geom_Point <- geom_point(size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=l, color=l)) +
                          geom_line(data=vS, size=1) +
