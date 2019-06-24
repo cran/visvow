@@ -1289,7 +1289,7 @@ visvow <- function()
           return(NULL)
 
         file.rename(inFile$datapath, paste0(inFile$datapath,".xlsx"))
-        return(as.data.frame(read_excel(paste0(inFile$datapath,".xlsx"),1)))
+        return(as.data.frame(read_excel(paste0(inFile$datapath,".xlsx"), 1, .name_repair = "minimal")))
       })
 
       vowelTab <- reactive(
@@ -2005,7 +2005,7 @@ visvow <- function()
                          geom_ribbon(data=vS, aes(ymin=ll, ymax=ul), alpha=0.2) +
                          ggtitle(input$title0) +
                          scale_x_continuous(breaks = unique(vT$x)) +
-                         xlab("time percentage") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
+                         xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint0b), family=input$replyFont0b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -2048,7 +2048,7 @@ visvow <- function()
                          geom_ribbon(data=vS, aes(ymin=ll, ymax=ul), alpha=0.2) +
                          ggtitle(paste(input$title0,paste(input$replyPlot0, collapse = " "))) +
                          scale_x_continuous(breaks = unique(vT$x)) +
-                         xlab("time percentage") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
+                         xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          facet_wrap(~vT$p) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint0b), family=input$replyFont0b),
@@ -2092,7 +2092,7 @@ visvow <- function()
                          geom_ribbon(data=vS, aes(x=x, ymin=ll, ymax=ul, fill = l), alpha=0.2, colour=NA) +
                          ggtitle(input$title0) +
                          scale_x_continuous(breaks = unique(vT$x)) +
-                         xlab("time percentage") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
+                         xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          scale_colour_discrete(name=paste0(paste(input$replyLine0,collapse = " "),"\n")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint0b), family=input$replyFont0b),
@@ -2146,7 +2146,7 @@ visvow <- function()
                          geom_ribbon(data=vS, aes(x=x, ymin=ll, ymax=ul, fill = l), alpha=0.2, colour=NA) +
                          ggtitle(paste(input$title0,paste(input$replyPlot0,collapse = " "))) +
                          scale_x_continuous(breaks = unique(vT$x)) +
-                         xlab("time percentage") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
+                         xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          scale_colour_discrete(name=paste0(paste(input$replyLine0, collapse = " "),"\n")) +
                          facet_wrap(~vT$p) +
                          theme_bw() +
@@ -2883,10 +2883,10 @@ visvow <- function()
 
       output$selGeon1 <- renderUI(
       {
-        if ((is.null(vowelTab())) || (length(input$replyTimes1)>1))
+        if (is.null(vowelTab()))
           return(NULL)
 
-        if (input$axisZ=="--")
+        if ((input$axisZ=="--") && (length(input$replyTimes1)<=1))
           tagList(splitLayout
           (
             cellWidths = c("19%", "17%", "15%", "21%", "19%"),
@@ -2898,6 +2898,8 @@ visvow <- function()
             checkboxInput("geon5", "ellipse", value = FALSE)
           ))
         else
+
+        if ((input$axisZ!="--") && (length(input$replyTimes1)<=1))
           tagList(splitLayout
           (
             cellWidths = c("19%", "19%", "19%"),
@@ -2905,6 +2907,11 @@ visvow <- function()
             checkboxInput("geon1", "labels", value = FALSE),
             checkboxInput("geon2", "lines" , value = TRUE )
           ))
+        else
+
+        if (length(input$replyTimes1)> 2)
+          checkboxInput("geon1", "smooth trajectories", value = FALSE)
+        else {}
       })
 
       output$selPars <- renderUI(
@@ -3220,6 +3227,24 @@ visvow <- function()
         {
           vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
 
+          if (input$geon1)
+          {
+            xx <- c()
+            yy <- c()
+
+            for (i in unique(vT$index))
+            {
+              vTsub <- subset(vT, index==i)
+
+              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(input$replyTimes1)*10)$y)
+              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(input$replyTimes1)*10)$y)
+            }
+
+            vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
+            vT$X <- xx
+            vT$Y <- yy
+          }
+
           Basis <- ggplot(data=vT, aes(x=X, y=Y, colour=color, label=""))
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
@@ -3407,7 +3432,29 @@ visvow <- function()
 
         if ((length(input$replyTimes1)>1) && (input$axisZ!="--"))
         {
-          vT <- vowelSub1()
+          vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
+
+          if (input$geon1)
+          {
+            xx <- c()
+            yy <- c()
+            zz <- c()
+
+            for (i in unique(vT$index))
+            {
+              vTsub <- subset(vT, index==i)
+
+              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(input$replyTimes1)*10)$y)
+              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(input$replyTimes1)*10)$y)
+              zz <- c(zz, spline(vTsub$time, vTsub$Z, n=length(input$replyTimes1)*10)$y)
+            }
+
+            vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
+            vT$time <- rep(seq(1, length(input$replyTimes1)*10), length(unique(vT$index)))
+            vT$X <- xx
+            vT$Y <- yy
+            vT$Z <- zz
+          }
 
           if ((input$axisX=="F1") | (input$axisX=="F2"))
             vT$X <- -1 * vT$X
@@ -3911,6 +3958,8 @@ visvow <- function()
           colnames(ag)[2] <- paste(input$replyPlot4 , collapse = " ")
           colnames(ag)[3] <- input$replyMethod4
 
+          colnames(ag) <- make.unique(names(ag))
+
           return(ag)
         }
         else
@@ -3963,6 +4012,8 @@ visvow <- function()
           colnames(ag)[1] <- paste(input$replyXaxis4, collapse = " ")
           colnames(ag)[2] <- paste(input$replyLine4 , collapse = " ")
           colnames(ag)[3] <- input$replyMethod4
+
+          colnames(ag) <- make.unique(names(ag))
 
           return(ag)
         }
@@ -4020,6 +4071,8 @@ visvow <- function()
           colnames(ag)[2] <- paste(input$replyLine4 , collapse = " ")
           colnames(ag)[3] <- paste(input$replyPlot4 , collapse = " ")
           colnames(ag)[4] <- input$replyMethod4
+
+          colnames(ag) <- make.unique(names(ag))
 
           return(ag)
         }
@@ -4582,6 +4635,8 @@ visvow <- function()
           colnames(ag)[2] <- paste(input$replyPlot2 , collapse = " ")
           colnames(ag)[3] <- "duration"
 
+          colnames(ag) <- make.unique(names(ag))
+
           return(ag)
         }
         else
@@ -4634,6 +4689,8 @@ visvow <- function()
           colnames(ag)[1] <- paste(input$replyXaxis2, collapse = " ")
           colnames(ag)[2] <- paste(input$replyLine2 , collapse = " ")
           colnames(ag)[3] <- "duration"
+
+          colnames(ag) <- make.unique(names(ag))
 
           return(ag)
         }
@@ -4691,6 +4748,8 @@ visvow <- function()
           colnames(ag)[2] <- paste(input$replyLine2 , collapse = " ")
           colnames(ag)[3] <- paste(input$replyPlot2 , collapse = " ")
           colnames(ag)[4] <- "duration"
+
+          colnames(ag) <- make.unique(names(ag))
 
           return(ag)
         }
