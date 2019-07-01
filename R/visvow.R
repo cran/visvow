@@ -3111,6 +3111,7 @@ visvow <- function()
           vT$index <- paste0(vT$time,vT$index)
 
           Basis <- ggplot(data = vT, aes(x=X, y=Y, fill=color, color=color))
+          Fill  <- geom_blank()
 
           if (input$geon1)
           {
@@ -3142,7 +3143,20 @@ visvow <- function()
           if (input$geon3)
           {
             chulls <- ddply(vT, .(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
-            Hull <- geom_polygon(data=chulls, aes(x=X, y=Y, group=color, fill=color), alpha=0.1)
+
+            if ((length(unique(vT$color))==1) | (as.character(input$replyColor)[1]=="vowel"))
+            {
+              Hull <- geom_polygon(data=chulls, aes(x=X, y=Y, group=color, fill=color), alpha=0.1)
+              Fill <- scale_fill_manual(values=colPalette1(length(unique(vT$color))))
+            }
+            else
+
+            if (length(unique(vT$color))> 1)
+            {
+              Hull <- geom_polygon(data=chulls, aes(x=X, y=Y, group=color, fill=color), alpha=0  )
+              Fill <- scale_fill_manual(values=rep("white", length(unique(vT$color))))
+            }
+            else {}
           }
           else
           {
@@ -3176,7 +3190,21 @@ visvow <- function()
             if ((input$geon1) | (input$geon3))
               Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel)
             else
-              Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel, geom="polygon", alpha=0.3)
+            {
+              if ((length(unique(vT$color))==1) | (as.character(input$replyColor)[1]=="vowel"))
+              {
+                Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel, geom="polygon", alpha=0.3)
+                Fill <- scale_fill_manual(values=colPalette1(length(unique(vT$color))))
+              }
+              else
+
+              if (length(unique(vT$color))> 1)
+              {
+                Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel, geom="polygon", alpha=0  )
+                Fill <- scale_fill_manual(values=rep("white", length(unique(vT$color))))
+              }
+              else {}
+            }
           }
           else
           {
@@ -3210,9 +3238,8 @@ visvow <- function()
             Legend <- theme(legend.position="none")
           }
 
-          graphics::plot(Basis + Points + Hull +Spokes + Ellipse + Centers + scaleX + scaleY + Title +Facet +
-                         scale_color_manual(values=colPalette1(length(unique(vT$color)))) +
-                         scale_fill_manual (values=colPalette1(length(unique(vT$color)))) +
+          graphics::plot(Basis + Points + Hull +Spokes + Ellipse + Centers + scaleX + scaleY + Title + Facet +
+                         scale_color_manual(values=colPalette1(length(unique(vT$color)))) + Fill +
                          labs(colour=paste(input$replyColor, collapse = " "), fill=paste(input$replyColor, collapse = " ")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint1b), family=input$replyFont1b),
@@ -3808,34 +3835,34 @@ visvow <- function()
 
         for (i in 1:(length(input$replyTimes4)-1))
         {
-          if (is.element(i,as.numeric(input$replyTimes4)))
+          i1 <- as.numeric(input$replyTimes4[i  ])
+          i2 <- as.numeric(input$replyTimes4[i+1])
+
+          indexTime1 <- indexVowel + 2 + ((i1-1)*5)
+          indexTime2 <- indexVowel + 2 + ((i2-1)*5)
+
+          Var <- c("f0","F1","F2","F3")
+          sum <- rep(0,nrow(vT))
+
+          for (j in 1:4)
           {
-            indexTime1 <- indexVowel + 2 + ((i-1)*5)
-            indexTime2 <- indexVowel + 2 + ( i   *5)
-
-            Var <- c("f0","F1","F2","F3")
-            sum <- rep(0,nrow(vT))
-
-            for (j in 1:4)
+            if (is.element(Var[j],input$replyVar4))
             {
-              if (is.element(Var[j],input$replyVar4))
-              {
-                indexVar1 <- indexTime1 + j
-                indexVar2 <- indexTime2 + j
+              indexVar1 <- indexTime1 + j
+              indexVar2 <- indexTime2 + j
 
-                sum <- sum + (vT[,indexVar1] - vT[,indexVar2])^2
-              }
+              sum <- sum + (vT[,indexVar1] - vT[,indexVar2])^2
             }
-
-            VL     <- sqrt(sum)
-            VL_roc <- VL / (vT[,indexTime2] - vT[,indexTime1])
-
-            if (input$replyMethod4=="TL")
-              vT$dynamics <- vT$dynamics + VL
-
-            if (input$replyMethod4=="TL_roc")
-              vT$dynamics <- vT$dynamics + VL_roc
           }
+
+          VL     <- sqrt(sum)
+          VL_roc <- VL / (vT[,indexTime2] - vT[,indexTime1])
+
+          if (input$replyMethod4=="TL")
+            vT$dynamics <- vT$dynamics + VL
+
+          if (input$replyMethod4=="TL_roc")
+            vT$dynamics <- vT$dynamics + VL_roc
         }
 
         return(vT)
