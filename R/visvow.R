@@ -1122,10 +1122,23 @@ visvow <- function()
               width=12,
 
               textInput("title3", "Plot title", "", width="100%"),
-              uiOutput('selScale3'),
               uiOutput('selTimes3'),
 
-              checkboxGroupInput("selFormant3", "Include formants:", c("F1","F2","F3"), selected=c("F1","F2"), TRUE),
+              splitLayout
+              (
+                cellWidths = c("50%", "50%"),
+                checkboxGroupInput("selFormant3", "Include formants:", c("F1","F2","F3"), selected=c("F1","F2"), TRUE),
+                radioButtons('selMetric3', 'Metric:', c("Euclidean","Accdist"), selected = "Euclidean", TRUE)
+              ),
+
+              splitLayout
+              (
+                cellWidths = c("50%", "50%"),
+                uiOutput('selScale3'),
+                uiOutput('selNormal3')
+              ),
+
+              uiOutput('selTimesN3'),
 
               splitLayout
               (
@@ -1196,11 +1209,11 @@ visvow <- function()
 
             tags$div(tags$ul
             (
-              tags$li(tags$span(HTML("<span style='color:blue'>Speakers</span>"),p("The first column should contain the speaker labels. Choose 'speaker' as column name. In our example there are three speakers labeled as 'A', 'B' and 'C'."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Vowels</span>"),p("A column that contains the vowel labels should follow; for this column always choose 'vowel' as column name. In our example each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. Although in this table each vowel occurs just one time per speaker, multiple pronunciations are possible. In case you want to use IPA characters (as in the example), enter them as Unicode characters. In order to find Unicode IPA characters, use the online IPA Chart Keyboard of Weston Ruter at http://westonruter.github.io/ipa-chart/keyboard/. N.B.: the columns 'speaker' and 'vowel' are obligatory."))),
+              tags$li(tags$span(HTML("<span style='color:blue'>Speakers</span>"),p("The first column should contain the speaker labels. Choose 'speaker' as column name. In our example there are three speakers labeled as 'A', 'B' and 'C'. This column is obligatory."))),
+              tags$li(tags$span(HTML("<span style='color:blue'>Vowels</span>"),p("A column that contains the vowel labels should follow. For this column choose 'vowel' as column name. In our example each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. Although in this table each vowel occurs just one time per speaker, multiple pronunciations are possible. In case you want to use IPA characters (as in the example), enter them as Unicode characters. In order to find Unicode IPA characters, use the online IPA Chart Keyboard of Weston Ruter at http://westonruter.github.io/ipa-chart/keyboard/. This column is obligatory."))),
               tags$li(tags$span(HTML("<span style='color:blue'>Categorical variables</span>"),p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Duration</span>"),p("A column which contains the durations of the vowels should follow, with 'duration' as column name. The measurements may be either in seconds or milliseconds. This column is obligatory as well."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Spectral variabels</span>"),p("Finally, a set of five columns should follow: 'time', f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. In our table f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice, but may occur more often. For each repetition the same column names may be used, as was done in the example table below.")))
+              tags$li(tags$span(HTML("<span style='color:blue'>Duration</span>"),p("A column which contains the durations of the vowels should follow, with 'duration' as column name. The measurements may be either in seconds or milliseconds. This column is obligatory, but may be empty."))),
+              tags$li(tags$span(HTML("<span style='color:blue'>Spectral variabels</span>"),p("Finally, a set of five columns should follow: 'time', f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names may be used. In the example table below f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice. A set should always include all five columns, but the columns 'time', 'f0' and 'f3' may be empty.")))
             )),
 
             br(),
@@ -2357,6 +2370,12 @@ visvow <- function()
 
       ##########################################################################
 
+      replyTimes10  <- reactive(input$replyTimes1)
+      replyTimes1   <- debounce(replyTimes10 , 2000)
+  
+      replyTimesN10 <- reactive(input$replyTimesN1)
+      replyTimesN1  <- debounce(replyTimesN10, 2000)
+
       vowelScale1 <- reactive(
       {
         return(vowelScale(vowelTab(),input$replyScale1,0))
@@ -2371,8 +2390,8 @@ visvow <- function()
         nColumns   <- ncol(vowelScale1())
         nPoints    <- (nColumns - (indexVowel + 1))/5
 
-        if (nPoints==max(as.numeric(input$replyTimesN)))
-          replyTimesN <- input$replyTimesN
+        if (nPoints==max(as.numeric(replyTimesN1())))
+          replyTimesN <- replyTimesN1()
         else
           replyTimesN <- as.character(Round(nPoints/2))
 
@@ -2401,7 +2420,7 @@ visvow <- function()
 
         nPoints <- (ncol(vowelTab()) - (indexVowel + 1))/5
 
-        if (max(as.numeric(input$replyTimes1))>nPoints)
+        if (max(as.numeric(replyTimes1()))>nPoints)
           return(NULL)
         else
 
@@ -2409,7 +2428,7 @@ visvow <- function()
           return(NULL)
         else
 
-        if (length(input$replyTimes1)>1)
+        if (length(replyTimes1())>1)
         {}
         else
 
@@ -2477,9 +2496,9 @@ visvow <- function()
         {
           vT0 <- data.frame()
 
-          for (i in (1:length(input$replyTimes1)))
+          for (i in (1:length(replyTimes1())))
           {
-            Code <- strtoi(input$replyTimes1[i])
+            Code <- strtoi(replyTimes1()[i])
 
             indexF1 <- indexVowel + 4 + ((Code-1) * 5)
             indexF2 <- indexVowel + 5 + ((Code-1) * 5)
@@ -2574,7 +2593,7 @@ visvow <- function()
 
           no <- nrow(aggregate(cbind(X,Y,Z)~vowel+color+shape+plot, data=vT, FUN=mean))
           index <- seq(1:no)
-          vT$index <- rep(index,length(input$replyTimes1))
+          vT$index <- rep(index,length(replyTimes1()))
         }
 
         ###
@@ -2734,7 +2753,7 @@ visvow <- function()
         nColumns     <- ncol(vowelTab())
         nPoints      <- (nColumns - (indexVowel + 1))/5
 
-        checkboxGroupInput('replyTimesN', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
+        checkboxGroupInput('replyTimesN1', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
       })
 
       output$manScale <- renderUI(
@@ -2809,7 +2828,7 @@ visvow <- function()
         if (is.null(vowelTab()))
           return(NULL)
 
-        if ((length(input$replyTimes1)==1) && (input$axisZ=="--"))
+        if ((length(replyTimes1())==1) && (input$axisZ=="--"))
         {
           indexVowel <- grep("^vowel$", colnames(vowelTab()))
 
@@ -2834,7 +2853,7 @@ visvow <- function()
         if  (is.null(vowelTab()))
           return(NULL)
 
-        if ((length(input$replyShape)>0) && (length(input$replyTimes1)==1) && (input$axisZ=="--"))
+        if ((length(input$replyShape)>0) && (length(replyTimes1())==1) && (input$axisZ=="--"))
         {
           if (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)
             options <- NULL
@@ -2886,7 +2905,7 @@ visvow <- function()
         if (is.null(vowelTab()))
           return(NULL)
 
-        if ((input$axisZ=="--") && (length(input$replyTimes1)<=1))
+        if ((input$axisZ=="--") && (length(replyTimes1())<=1))
           tagList(splitLayout
           (
             cellWidths = c("19%", "17%", "15%", "21%", "19%"),
@@ -2899,7 +2918,7 @@ visvow <- function()
           ))
         else
 
-        if ((input$axisZ!="--") && (length(input$replyTimes1)<=1))
+        if ((input$axisZ!="--") && (length(replyTimes1())<=1))
           tagList(splitLayout
           (
             cellWidths = c("19%", "19%", "19%"),
@@ -2909,7 +2928,7 @@ visvow <- function()
           ))
         else
 
-        if (length(input$replyTimes1)> 2)
+        if (length(replyTimes1())> 2)
           checkboxInput("geon1", "smooth trajectories", value = FALSE)
         else {}
       })
@@ -2919,7 +2938,7 @@ visvow <- function()
         if (is.null(vowelTab()))
           return(NULL)
 
-        if ((input$axisZ=="--") && (length(input$replyTimes1)==1) && (length(input$geon5)>0) && input$geon5)
+        if ((input$axisZ=="--") && (length(replyTimes1())==1) && (length(input$geon5)>0) && input$geon5)
           numericInput('replyLevel', 'Confidence level:', value=0.95, step=0.01, width = "100%")
         else
 
@@ -2929,7 +2948,7 @@ visvow <- function()
           (
             cellWidths = c("50%", "50%"),
             numericInput('replyPhi'  , 'Angle x-axis:', value=40, step=1, width = "100%"),
-            numericInput('replyTheta', 'Angle z-axis:', value=40, step=1, width = "100%")
+            numericInput('replyTheta', 'Angle z-axis:', value=30, step=1, width = "100%")
           ))
         }
         else
@@ -3032,10 +3051,10 @@ visvow <- function()
 
       plotGraph1 <- function()
       {
-        if (is.null(vowelSub1()) || (nrow(vowelSub1())==0) | (length(input$replyTimes1)==0))
+        if (is.null(vowelSub1()) || (nrow(vowelSub1())==0) | (length(replyTimes1())==0))
           return(NULL)
 
-        if ((length(input$replyTimes1)==1) && (!(input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)) && (input$axisZ=="--"))
+        if ((length(replyTimes1())==1) && (!(input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()
 
@@ -3101,7 +3120,7 @@ visvow <- function()
         }
         else
 
-        if ((length(input$replyTimes1)==1) && (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5) && (input$axisZ=="--"))
+        if ((length(replyTimes1())==1) && (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()
 
@@ -3250,7 +3269,7 @@ visvow <- function()
         }
         else
 
-        if ((length(input$replyTimes1)>1) && (input$axisZ=="--"))
+        if ((length(replyTimes1())>1) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
 
@@ -3263,8 +3282,8 @@ visvow <- function()
             {
               vTsub <- subset(vT, index==i)
 
-              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(input$replyTimes1)*10)$y)
-              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(input$replyTimes1)*10)$y)
+              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
+              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
             }
 
             vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
@@ -3315,7 +3334,7 @@ visvow <- function()
         }
         else
 
-        if ((length(input$replyTimes1)==1) && (input$axisZ!="--"))
+        if ((length(replyTimes1())==1) && (input$axisZ!="--"))
         {
           vT <- vowelSub1()
 
@@ -3366,7 +3385,7 @@ visvow <- function()
             Phi <- input$replyPhi
 
           if ((length(input$replyPhi)==0) || (is.na(input$replyTheta)))
-            Theta <- 40
+            Theta <- 30
           else
             Theta <- input$replyTheta
 
@@ -3457,7 +3476,7 @@ visvow <- function()
         }
         else
 
-        if ((length(input$replyTimes1)>1) && (input$axisZ!="--"))
+        if ((length(replyTimes1())>1) && (input$axisZ!="--"))
         {
           vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
 
@@ -3471,13 +3490,13 @@ visvow <- function()
             {
               vTsub <- subset(vT, index==i)
 
-              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(input$replyTimes1)*10)$y)
-              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(input$replyTimes1)*10)$y)
-              zz <- c(zz, spline(vTsub$time, vTsub$Z, n=length(input$replyTimes1)*10)$y)
+              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
+              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
+              zz <- c(zz, spline(vTsub$time, vTsub$Z, n=length(replyTimes1())*10)$y)
             }
 
             vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
-            vT$time <- rep(seq(1, length(input$replyTimes1)*10), length(unique(vT$index)))
+            vT$time <- rep(seq(1, length(replyTimes1())*10), length(unique(vT$index)))
             vT$X <- xx
             vT$Y <- yy
             vT$Z <- zz
@@ -3512,7 +3531,7 @@ visvow <- function()
             Phi <- input$replyPhi
 
           if ((length(input$replyPhi)==0) || (is.na(input$replyTheta)))
-            Theta <- 40
+            Theta <- 30
           else
             Theta <- input$replyTheta
 
@@ -3649,7 +3668,7 @@ visvow <- function()
       {
         output$graph1 <- renderPlot(height = 550, width = 700, res = res1(),
         {
-          if (length(input$replyTimes1)>0)
+          if (length(replyTimes1())>0)
           {
             plotGraph1()
           }
@@ -3674,7 +3693,7 @@ visvow <- function()
 
       output$download1a <- downloadHandler(filename = fileName1a, content = function(file)
       {
-        if (length(input$replyTimes1)>0)
+        if (length(replyTimes1())>0)
         {
           vT <- vowelSub1()
 
@@ -3741,7 +3760,7 @@ visvow <- function()
 
         grDevices::pdf(NULL)
 
-        if ((length(input$replyTimes1)>0) && (nrow(vowelSub1())>0))
+        if ((length(replyTimes1())>0) && (nrow(vowelSub1())>0))
           print(plotGraph1())
         else
           print(ggplot()+theme_bw())
@@ -3796,7 +3815,7 @@ visvow <- function()
           grDevices ::cairo_pdf(file, width = width , height = height)
         else {}
 
-        if ((length(input$replyTimes1)>0) && (nrow(vowelSub1())>0))
+        if ((length(replyTimes1())>0) && (nrow(vowelSub1())>0))
           print(plotGraph1())
         else
           graphics::plot.new()
@@ -5174,6 +5193,15 @@ visvow <- function()
 
       ##########################################################################
 
+      replyTimes30  <- reactive(input$replyTimes3)
+      replyTimes3   <- debounce(replyTimes30 , 2000)
+  
+      replyTimesN30 <- reactive(input$replyTimesN3)
+      replyTimesN3  <- debounce(replyTimesN30, 2000)
+  
+      selFormant30  <- reactive(input$selFormant3)
+      selFormant3   <- debounce(selFormant30 , 2000)
+
       vowelExcl3 <- reactive(
       {
         if (is.null(vowelTab()) || (nrow(vowelTab())==0))
@@ -5208,24 +5236,46 @@ visvow <- function()
         return(vowelScale(vowelSame3(),input$replyScale3,0))
       })
 
-      vowelSubS3 <- reactive(
+      vowelNorm3 <- reactive(
       {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0)  || (length(input$replyVowel3)<3) || (length(input$replyTimes3)==0))
+        if (length(input$replyNormal3)==0)
           return(NULL)
 
-        vT <- vowelScale3()
+        indexVowel <- grep("^vowel$", colnames(vowelScale3()))
+        nColumns   <- ncol(vowelScale3())
+        nPoints    <- (nColumns - (indexVowel + 1))/5
+
+        if (nPoints==max(as.numeric(replyTimesN3())))
+          replyTimesN <- replyTimesN3()
+        else
+          replyTimesN <- as.character(Round(nPoints/2))
+
+        vL1 <- vowelLong1(vowelScale3(),replyTimesN)
+        vL2 <- vowelLong2(vL1)
+        vL3 <- vowelLong3(vL1)
+        vL4 <- vowelLong4(vL1)
+
+        return(vowelNormF(vowelScale3(),vL1,vL2,vL3,vL4,input$replyNormal3))
+      })
+
+      vowelSubS3 <- reactive(
+      {
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0)  || (length(input$replyVowel3)<3) || (length(replyTimes3())==0) || (length(selFormant3())==0))
+          return(NULL)
+
+        vT <- vowelNorm3()
         vT <- subset(vT, is.element(vT$vowel, input$replyVowel3))
 
         indexVowel <- grep("^vowel$", colnames(vowelTab()))
         nPoints <- (ncol(vowelTab()) - (indexVowel + 1))/5
 
-        if ((nrow(vT)>0) && (max(as.numeric(input$replyTimes3))<=nPoints))
+        if ((nrow(vT)>0) && (max(as.numeric(replyTimes3()))<=nPoints))
         {
           vT0 <- data.frame()
 
-          for (i in (1:length(input$replyTimes3)))
+          for (i in (1:length(replyTimes3())))
           {
-            Code <- strtoi(input$replyTimes3[i])
+            Code <- strtoi(replyTimes3()[i])
 
             indexF1 <- indexVowel + 4 + ((Code-1) * 5)
             indexF2 <- indexVowel + 5 + ((Code-1) * 5)
@@ -5250,7 +5300,7 @@ visvow <- function()
         if (is.null(vowelSubS3()) || (nrow(vowelSubS3())==0) || (length(input$replyGrouping3)==0))
           return(NULL)
 
-        vT0 <- unique(data.frame(speaker=vowelScale3()$speaker,grouping=fuseCols(vowelScale3(),input$replyGrouping3)))
+        vT0 <- unique(data.frame(speaker=vowelNorm3()$speaker,grouping=fuseCols(vowelNorm3(),input$replyGrouping3)))
 
         if (max(as.data.frame(table(vT0$speaker))$Freq)==1)
         {
@@ -5262,6 +5312,68 @@ visvow <- function()
           vT <- rep("none",nrow(vowelSubS3()))
 
         return(data.frame(grouping=vT))
+      })
+
+      # Distances among speakers
+
+      vowelCorS1 <- reactive(
+      {
+        if (is.null(vowelSubS3()) || (nrow(vowelSubS3())==0))
+          return(NULL)
+
+        vT <- vowelSubS3()
+        vT$speaker <- as.character(vT$speaker)
+
+        labs <- unique(vT$speaker)
+        nl <- length(labs)
+
+        corr <- matrix(0, nrow = nl, ncol = nl)
+
+        rownames(corr) <- labs
+        colnames(corr) <- labs
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in (2:nl))
+          {
+            incProgress(1/nl, message = paste("Calculating ...", format((i/nl)*100, digits=0), "%"))
+
+            iSub <- subset(vT, speaker==labs[i])
+
+            for (j in (1:(i-1)))
+            {
+              jSub <- subset(vT, speaker==labs[j])
+
+              if (is.element("F1",selFormant3()))
+                difF1 <- (iSub$F1-jSub$F1)^2
+              if (is.element("F2",selFormant3()))
+                difF2 <- (iSub$F2-jSub$F2)^2
+              if (is.element("F3",selFormant3()))
+                difF3 <- (iSub$F3-jSub$F3)^2
+
+              sumF <- rep(0, nrow(iSub))
+
+              if (is.element("F1",selFormant3()))
+                sumF <- sumF + difF1
+              if (is.element("F2",selFormant3()))
+                sumF <- sumF + difF2
+              if (is.element("F3",selFormant3()))
+                sumF <- sumF + difF3
+
+              sumF <- sqrt(sumF)
+
+              corr[i,j] <- mean(sumF)
+              corr[j,i] <- corr[i,j]
+            }
+          }
+        })
+
+        for (i in (1:nl))
+        {
+          corr[i,i] <- 0
+        }
+
+        return(corr)
       })
 
       # Measure distances among vowels per speaker
@@ -5287,11 +5399,11 @@ visvow <- function()
             k <- k + 1
 
             sqsum <- 0
-            if (is.element("F1",input$selFormant3))
+            if (is.element("F1",selFormant3()))
               sqsum <- sqsum + (iSub$F1-jSub$F1)^2
-            if (is.element("F2",input$selFormant3))
+            if (is.element("F2",selFormant3()))
               sqsum <- sqsum + (iSub$F2-jSub$F2)^2
-            if (is.element("F3",input$selFormant3))
+            if (is.element("F3",selFormant3()))
               sqsum <- sqsum + (iSub$F3-jSub$F3)^2
 
             vec[k] <- sqrt(sqsum)
@@ -5330,7 +5442,7 @@ visvow <- function()
 
       # Correlations among speakers
 
-      vowelCorS <- reactive(
+      vowelCorS2 <- reactive(
       {
         if (is.null(vowelSubS3()) || (nrow(vowelSubS3())==0))
           return(NULL)
@@ -5378,6 +5490,17 @@ visvow <- function()
         }
 
         return(corr)
+      })
+
+      # Compare speakers
+
+      vowelCorS <- reactive(
+      {
+        if (input$selMetric3=="Euclidean")
+          return(vowelCorS1())
+
+        if (input$selMetric3=="Accdist")
+          return(vowelCorS2())
       })
 
       # Correlations among speakers of selected groupings
@@ -5469,7 +5592,11 @@ visvow <- function()
         if (is.null(vowelCor3()) || (nrow(vowelCor3())==0))
           return(NULL)
 
-        return(as.dist(1-vowelCor3(), diag=FALSE, upper=FALSE))
+        if (input$selMetric3=="Euclidean")
+          return(as.dist(  vowelCor3(), diag=FALSE, upper=FALSE))
+
+        if (input$selMetric3=="Accdist"  )
+          return(as.dist(1-vowelCor3(), diag=FALSE, upper=FALSE))
       })
 
       clusObj <- reactive(
@@ -5556,6 +5683,109 @@ visvow <- function()
                      "mel: O'Shaughnessy (1987)")
 
         selectInput('replyScale3', 'Scale:', options, selected = options[1], selectize=FALSE, multiple=FALSE, width="100%")
+      })
+
+      output$selNormal3 <- renderUI(
+      {
+        if (is.null(vowelTab()) || length(input$replyScale3)==0)
+          return(NULL)
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+
+        ###
+
+        options1 <- c()
+
+        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (!is.element("F3",selFormant3())))
+          options1 <- c(options1, "Peterson (1951)" = " Peterson")
+
+        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (input$replyScale3=="Hz"))
+          options1 <- c(options1, "Sussman (1986)" = " Sussman")
+
+        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
+            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (!is.element("F3",selFormant3())))
+          options1 <- c(options1, "Syrdal & Gopal (1986)" = " Syrdal & Gopal")
+
+        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
+            (input$replyScale3=="Hz"))
+          options1 <- c(options1, "Miller (1989)" = " Miller")
+
+        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (!is.element("F3",selFormant3())))
+          options1 <- c(options1, "Thomas & Kendall (2007)" = " Thomas & Kendall")
+
+        ###
+
+        options2 <- c()
+
+          options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
+
+        ###
+
+        options3 <- c()
+
+          options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
+
+        if (!is.element("F3",selFormant3()))
+          options3 <- c(options3, "Watt & Fabricius (2002)" = " Watt & Fabricius")
+
+        if (!is.element("F3",selFormant3()))
+          options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
+
+        if (!is.element("F3",selFormant3()))
+          options3 <- c(options3, "Heeringa & Van de Velde (2018)" = " Heeringa & Van de Velde")
+
+        ###
+
+        options4 <- c()
+
+        if  (input$replyScale3=="Hz")
+          options4 <- c(options4, "Nearey (1978) I" = " Nearey I")
+
+        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
+            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (input$replyScale3=="Hz"))
+          options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
+
+        if ((!is.element("F3",selFormant3())) &
+            (input$replyScale3=="Hz"))
+          options4 <- c(options4, "Labov (2006) I" = " Labov I")
+
+        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
+            (input$replyScale3=="Hz"))
+          options4 <- c(options4, "Labov (2006) II" = " Labov II")
+
+        ###
+
+        options <- c("None" = "", list(" Formant-ratio normalization"=options1,
+                                       " Range normalization"        =options2,
+                                       " Centroid normalization"     =options3,
+                                       " Log-mean normalization"     =options4))
+
+        selectInput('replyNormal3', 'Normalization:', options, selected = options[1], selectize=FALSE, multiple=FALSE)
+      })
+
+      output$selTimesN3 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        if ((length(input$replyNormal3)>0) && ((input$replyNormal3=="") |
+                                               (input$replyNormal3==" Peterson") |
+                                               (input$replyNormal3==" Sussman") |
+                                               (input$replyNormal3==" Syrdal & Gopal") |
+                                               (input$replyNormal3==" Thomas & Kendall")))
+          return(NULL)
+
+        timeCode     <- getTimeCode()
+        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
+        nColumns     <- ncol(vowelTab())
+        nPoints      <- (nColumns - (indexVowel + 1))/5
+
+        checkboxGroupInput('replyTimesN3', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
       })
 
       output$selVowel3 <- renderUI(
@@ -5651,7 +5881,7 @@ visvow <- function()
               geom_segment(aes(x = x, y = y, xend = xend, yend = yend))
 
         speakers         <- as.character(label(dendro)$label)
-        lookup           <- unique(data.frame(speaker=vowelScale3()$speaker,grouping=fuseCols(vowelScale3(),input$replyGrouping3)))
+        lookup           <- unique(data.frame(speaker=vowelNorm3()$speaker,grouping=fuseCols(vowelNorm3(),input$replyGrouping3)))
         rownames(lookup) <- lookup$speaker
         lookup$speaker   <- NULL
         groupings        <- lookup[speakers,]
@@ -5717,7 +5947,7 @@ visvow <- function()
           coords$V2 <- -1 * coords$V2
 
         speakers         <- as.character(rownames(as.matrix(vowelDist3())))
-        lookup           <- unique(data.frame(speaker=vowelScale3()$speaker,grouping=fuseCols(vowelScale3(),input$replyGrouping3)))
+        lookup           <- unique(data.frame(speaker=vowelNorm3()$speaker,grouping=fuseCols(vowelNorm3(),input$replyGrouping3)))
         rownames(lookup) <- lookup$speaker
         lookup$speaker   <- NULL
         groupings        <- lookup[speakers,]
@@ -5798,7 +6028,7 @@ visvow <- function()
       {
         output$graph3 <- renderPlot(height = 550, width = 700, res = res3(),
         {
-          if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(input$replyTimes3)>0) && (length(input$selFormant3)>0) && (!is.null(vowelCor3())))
+          if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelCor3())))
           {
             plotGraph3()
           }
@@ -5877,7 +6107,7 @@ visvow <- function()
 
       output$download3a <- downloadHandler(filename = fileName3a, content = function(file)
       {
-        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(input$replyTimes3)>0) && (length(input$selFormant3)>0)  && (!is.null(vowelCor3())))
+        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0)  && (!is.null(vowelCor3())))
         {
           vT <- data.frame(rownames(vowelCor3()),vowelCor3())
           colnames(vT) <- c("element",colnames(vowelCor3()))
@@ -5941,7 +6171,7 @@ visvow <- function()
 
         grDevices::pdf(NULL)
 
-        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(input$replyTimes3)>0) && (length(input$selFormant3)>0) && (!is.null(vowelCor3())))
+        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelCor3())))
           print(plotGraph3())
         else
           print(ggplot()+theme_bw())
