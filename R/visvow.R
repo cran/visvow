@@ -761,11 +761,12 @@ visvow <- function()
 
       navbarPage
       (
-        title=NULL,
-
+        title=NULL, id = "navBar",
+        
         tabPanel
         (
           title = "Load file",
+          value = "load_file",
 
           splitLayout
           (
@@ -792,7 +793,8 @@ visvow <- function()
         tabPanel
         (
           title = "Contours",
-
+          value = "contours",
+          
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -861,7 +863,8 @@ visvow <- function()
         tabPanel
         (
           title = "Formants",
-
+          value = "formants",
+          
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -961,7 +964,8 @@ visvow <- function()
         tabPanel
         (
           title = "Dynamics",
-
+          value = "dynamics",
+          
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -1041,7 +1045,8 @@ visvow <- function()
         tabPanel
         (
           title = "Duration",
-
+          value = "duration",
+          
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -1110,7 +1115,8 @@ visvow <- function()
         tabPanel
         (
           title = "Explore",
-
+          value = "explore",
+          
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -1191,7 +1197,8 @@ visvow <- function()
         tabPanel
         (
           title = "Help",
-
+          value = "help",
+          
           fluidPage
           (
             style = "border: 1px solid silver;",
@@ -1264,8 +1271,9 @@ visvow <- function()
 
         tabPanel
         (
-          title = "!",
-
+          title = "Disclaimer",
+          value = "disclaimer",
+          
           fluidPage
           (
             style = "border: 1px solid silver;",
@@ -1292,8 +1300,24 @@ visvow <- function()
 
     ############################################################################
 
-    server <- function(input, output)
+    server <- function(input, output, session)
     {
+      observeEvent(input$navBar, 
+      {
+        if (getUrlHash() == paste0("#", input$navBar)) return()
+        updateQueryString(paste0("#", input$navBar), mode = "push")
+      })
+      
+      observeEvent(getUrlHash(),
+      {
+        Hash <- getUrlHash()
+        if (Hash == paste0("#", input$navBar)) return()
+        Hash <- gsub("#", "", Hash)
+        updateNavbarPage(session, "navBar", selected=Hash)
+      })
+      
+      ##########################################################################
+
       vowelFile <- reactive(
       {
         inFile <- input$vowelFile
