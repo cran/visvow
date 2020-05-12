@@ -22,28 +22,29 @@ vowelTab <- read.table("data/table.csv", header = TRUE, sep = "\t")
 
 # vowelScale
 
-Scales <- c("Hz",
-            "bark: Schroeder et al. (1979)",
-            "bark: Zwicker & Terhardt (1980)",
-            "bark: Traunm\u00FCller (1990)",
-            "ERB: Greenwood (1961)",
-            "ERB: Moore & Glasberg (1983)",
-            "ERB: Glasberg & Moore (1990)",
-            "ln",
-            "mel: Fant (1968)",
-            "mel: O'Shaughnessy (1987)",
-            "ST")
+Scales <- c(" Hz",
+            " bark I",
+            " bark II",
+            " bark III",
+            " ERB I",
+            " ERB II",
+            " ERB III",
+            " ln",
+            " mel I",
+            " mel II",
+            " ST")
 
 for (i in 1:length(Scales))
 {
-  vowelScale1 <- read.table(paste0("data/",filename(Scales[i]),".csv"), header = TRUE, sep = "\t")
+  fn <- substr(filename(Scales[i]), 2, nchar(Scales[i]))
+  vowelScale1 <- read.table(paste0("data/", fn, ".csv"), header = TRUE, sep = "\t")
   vowelScale2 <- vowelScale(vowelTab, Scales[i], 50)
 
   for (j in (1:nrow(vowelScale1)))
   {
     for (k in c(5,6,7,8,10,11,12,13))
     {
-      test_that(paste0("Scaling to ",Scales[i]," is performed correctly"),
+      test_that(paste0("Scaling to ", Scales[i], " is performed correctly"),
                 expect_equal(vowelScale1[j,k], vowelScale2[j,k], tolerance = 0.000000001, scale = 1)
       )
     }

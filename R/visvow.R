@@ -47,8 +47,11 @@
 #' }
 #'
 #' @import
-#' shiny shinyBS stats ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne plyr grid svglite Cairo
+#' shiny shinyBS stats tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne plyr grid svglite Cairo
 #'
+#' @importFrom
+#' formattable renderFormattable formattable formatter style color_tile formattableOutput
+#' 
 #' @importFrom
 #' Rdpack reprompt
 #'
@@ -60,22 +63,22 @@ NULL
 
 Scale <- function(h,replyScale,Ref)
 {
-  if (replyScale=="Hz")
+  if (replyScale==" Hz")
   {
     s <- h
   }
 
-  if (replyScale=="bark: Schroeder et al. (1979)")
+  if (replyScale==" bark I")
   {
     s = 7*log(h/650+sqrt(1+(h/650)^2))
   }
 
-  if (replyScale=="bark: Zwicker & Terhardt (1980)")
+  if (replyScale==" bark II")
   {
     s = 13 * atan(0.00076*h) + 3.5 * atan((h/7500)^2)
   }
 
-  if (replyScale=="bark: Traunm\u00FCller (1990)")
+  if (replyScale==" bark III")
   {
     s <- (26.81 * (h/(1960+h))) - 0.53
 
@@ -83,37 +86,37 @@ Scale <- function(h,replyScale,Ref)
     s[which(s>20.1)] <- s[which(s>20.1)] + (0.22 * (  s[which(s>20.1)]-20.1))
   }
 
-  if (replyScale=="ERB: Greenwood (1961)")
+  if (replyScale==" ERB I")
   {
     s <- 16.7 * log10(1 + (h/165.4))
   }
 
-  if (replyScale=="ERB: Moore & Glasberg (1983)")
+  if (replyScale==" ERB II")
   {
     s <- 11.17 * log((h+312) / (h+14675)) + 43
   }
 
-  if (replyScale=="ERB: Glasberg & Moore (1990)")
+  if (replyScale==" ERB III")
   {
     s <- 21.4 * log10((0.00437*h)+1)
   }
 
-  if (replyScale=="ln")
+  if (replyScale==" ln")
   {
     s <- log(h)
   }
 
-  if (replyScale=="mel: Fant (1968)")
+  if (replyScale==" mel I")
   {
     s <- (1000/log10(2)) * log10((h/1000) + 1)
   }
 
-  if (replyScale=="mel: O'Shaughnessy (1987)")
+  if (replyScale==" mel II")
   {
     s <-1127 * log(1 + (h/700))
   }
 
-  if (replyScale=="ST")
+  if (replyScale==" ST")
   {
     s <- 12 * log2(h/Ref)
   }
@@ -661,6 +664,103 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
 
 ################################################################################
 
+optionsScale <- function()
+{
+  options <- c("Hz" = " Hz",
+               "bark: Schroeder et al. (1979)" = " bark I",
+               "bark: Zwicker & Terhardt (1980)" = " bark II",
+               "bark: Traunm\u00FCller (1990)" = " bark III",
+               "ERB: Greenwood (1961)" = " ERB I",
+               "ERB: Moore & Glasberg (1983)" = " ERB II",
+               "ERB: Glasberg & Moore (1990)" = " ERB III",
+               "ln" = " ln",
+               "mel: Fant (1968)" = " mel I",
+               "mel: O'Shaughnessy (1987)" = " mel II",
+               "ST" = " ST")
+
+  return(options)
+}
+
+optionsNormal <- function(vowelTab, replyScale, onlyF1F2)
+{
+  indexVowel <- grep("^vowel$", colnames(vowelTab))
+
+  ###
+
+  options1 <- c()
+
+  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      onlyF1F2)
+    options1 <- c(options1, "Peterson (1951)" = " Peterson")
+
+  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      (replyScale==" Hz"))
+    options1 <- c(options1, "Sussman (1986)" = " Sussman")
+
+  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
+      (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      onlyF1F2)
+    options1 <- c(options1, "Syrdal & Gopal (1986)" = " Syrdal & Gopal")
+
+  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
+      (replyScale==" Hz"))
+    options1 <- c(options1, "Miller (1989)" = " Miller")
+
+  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      onlyF1F2)
+    options1 <- c(options1, "Thomas & Kendall (2007)" = " Thomas & Kendall")
+
+  ###
+
+  options2 <- c()
+
+    options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
+
+  ###
+
+  options3 <- c()
+
+    options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
+
+  if (onlyF1F2)
+    options3 <- c(options3, "Watt & Fabricius (2002)" = " Watt & Fabricius")
+
+  if (onlyF1F2)
+    options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
+
+  if (onlyF1F2)
+    options3 <- c(options3, "Heeringa & Van de Velde (2018)" = " Heeringa & Van de Velde")
+
+  ###
+
+  options4 <- c()
+
+  if  (replyScale==" Hz")
+    options4 <- c(options4, "Nearey (1978) I" = " Nearey I")
+
+  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
+      (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      (replyScale==" Hz"))
+    options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
+
+  if ((onlyF1F2) &
+      (replyScale==" Hz"))
+    options4 <- c(options4, "Labov (2006) I" = " Labov I")
+
+  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
+      (replyScale==" Hz"))
+    options4 <- c(options4, "Labov (2006) II" = " Labov II")
+
+  ###
+
+  return(c("None" = "", list(" Formant-ratio normalization"=options1,
+                             " Range normalization"        =options2,
+                             " Centroid normalization"     =options3,
+                             " Log-mean normalization"     =options4)))
+}
+
+################################################################################
+
 vowelNormD <- function(vowelTab,replyNormal)
 {
   if ((is.null(vowelTab)) || (length(replyNormal)==0))
@@ -743,6 +843,10 @@ visvow <- function()
 
   shinyApp(
     ui <- fluidPage(
+      tags$style(type = 'text/css', '.title { margin-left: 20px; font-weight: bold; }'),
+      tags$style(type = 'text/css', '.navbar-default > .container-fluid { margin-left: -11px; }'),
+      tags$style(type = 'text/css', 'nav.navbar-default { margin-left: 15px; margin-right: 15px; }'),
+
       tags$style(type = 'text/css', 'p { margin-top: 0.0em; margin-bottom: 0.0em; }'),
       tags$style(type = 'text/css', 'h5 { margin-top: 0.3em; margin-bottom: 0.1em; }'),
       tags$style(type = 'text/css', 'h6 { margin-top: 1.0em; margin-bottom: 0.1em; }'),
@@ -756,35 +860,39 @@ visvow <- function()
       tags$style(type = 'text/css', '.shiny-progress .progress-text .progress-message { padding-top: 0px; padding-right: 3px; padding-bottom: 3px; padding-left: 10px; font-weight: bold; font-size: 18px; }'),
       tags$style(type = 'text/css', '.shiny-progress .progress-text .progress-detail { padding-top: 0px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px; font-size: 17px; }'),
 
-      img(src = 'www/FA.jpg', height = 60, align = "right"),
-      titlePanel("Visible Vowels"),
+      img(src = "www/FA1.jpg", height = 60, align = "right", style = 'margin-right: 15px;'),
+      titlePanel(title = HTML("<div class='title'>Visible Vowels<div>"), windowTitle = "Visible Vowels"),
+
+      tags$head(
+        tags$link(rel="icon", href="www/FA2.png"),
+
+        tags$meta(charset="UTF-8"),
+        tags$meta(name   ="description", content="Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology."),
+      ),
 
       navbarPage
       (
-        title=NULL, id = "navBar",
-        
+        title=NULL, id = "navBar", collapsible = TRUE,
+
         tabPanel
         (
           title = "Load file",
           value = "load_file",
 
-          splitLayout
+          fluidPage
           (
-            style = "border: 1px solid silver;",
-            cellWidths = c("32%", "68%"),
-            cellArgs = list(style = "padding: 6px"),
+            style = "border: 1px solid silver; padding: 6px;",
 
-            column
+            fluidPage
             (
-              width=12,
-              fileInput('vowelFile', 'Choose xlsx file',accept = c(".xlsx"), width="100%"),
+              fileInput('vowelFile', 'Choose xlsx file',accept = c(".xlsx"), width="40%"),
               uiOutput('checkFormat')
             ),
 
-            column
+            fluidPage
             (
-              width=12,
-              align="center",
+              style = "font-size: 90%; white-space: nowrap;",
+              align = "center",
               DT::dataTableOutput('vowelRound')
             )
           )
@@ -794,7 +902,7 @@ visvow <- function()
         (
           title = "Contours",
           value = "contours",
-          
+
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -862,9 +970,69 @@ visvow <- function()
 
         tabPanel
         (
+          title = "Normalization",
+          value = "normalization",
+
+          splitLayout
+          (
+            style = "border: 1px solid silver; padding-right: 20px; min-height: 690px;",
+            cellWidths = c("32%", "68%"),
+            cellArgs = list(style = "padding: 6px"),
+
+            column
+            (
+              width=12,
+
+              fluidPage(
+                style = 'border: 1px solid silver; margin-top: 7px; padding-top: 4px; padding-bottom: 4px;',
+                align = "center",
+                actionLink("buttonHelp5", label="", icon=icon("info-circle", lib = "font-awesome"), style='color: #2c84d7; font-size: 180%; margin-left: 4px;')
+              ),
+
+              br(),
+
+              uiOutput('selTimes5'),
+              uiOutput('selTimesN5'),
+
+              splitLayout(
+                uiOutput('selVars51'),
+                uiOutput('selVars52')
+              ),
+
+              uiOutput('selF35'),
+
+              uiOutput('exclVow5'),
+              br(),
+              div(style="text-align: center;", actionButton('getEval', 'Go!'))
+            ),
+
+            column
+            (
+              width = 12,
+              uiOutput("Graph5"),
+
+              hr(style='border-top: 1px solid #cccccc;'),
+
+              splitLayout
+              (
+                radioButtons(inputId  = 'selAuth5',
+                             label    = 'Choose author:',
+                             choices  = c("Flynn & Foulkes (2011)",
+                                          "Van der Harst (2011)"),
+                             selected =   "Van der Harst (2011)",
+                             inline   = FALSE),
+
+                uiOutput("selEval5")
+              )
+            )
+          )
+        ),
+
+        tabPanel
+        (
           title = "Formants",
           value = "formants",
-          
+
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -889,15 +1057,15 @@ visvow <- function()
 
               splitLayout
               (
-                uiOutput('selColor'),
-                uiOutput('selShape'),
+                uiOutput('selColor1'),
+                uiOutput('selShape1'),
                 uiOutput('selPlot1')
               ),
 
               splitLayout
               (
-                uiOutput('catColor'),
-                uiOutput('catShape'),
+                uiOutput('catColor1'),
+                uiOutput('catShape1'),
                 uiOutput('catPlot1')
               ),
 
@@ -965,7 +1133,7 @@ visvow <- function()
         (
           title = "Dynamics",
           value = "dynamics",
-          
+
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -991,7 +1159,7 @@ visvow <- function()
               (
                 cellWidths = c("70%", "30%"),
 
-                radioButtons("selError4", "Size of confidence intervals:", c("0%","90%","95%","99%"), selected = "0%", inline = TRUE),
+                radioButtons("selError4", "Size of confidence intervals:", c("0%","90%","95%","99%"), selected = "95%", inline = TRUE),
                 radioButtons("selMeasure4", "Use:", c("SD","SE"), selected = "SE", inline = TRUE)
               ),
 
@@ -1046,7 +1214,7 @@ visvow <- function()
         (
           title = "Duration",
           value = "duration",
-          
+
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -1065,7 +1233,7 @@ visvow <- function()
               (
                 cellWidths = c("70%", "30%"),
 
-                radioButtons("selError2", "Size of confidence intervals:", c("0%","90%","95%","99%"), selected = "0%", inline = TRUE),
+                radioButtons("selError2", "Size of confidence intervals:", c("0%","90%","95%","99%"), selected = "95%", inline = TRUE),
                 radioButtons("selMeasure2", "Use:", c("SD","SE"), selected = "SE", inline = TRUE)
               ),
 
@@ -1116,7 +1284,7 @@ visvow <- function()
         (
           title = "Explore",
           value = "explore",
-          
+
           splitLayout
           (
             style = "border: 1px solid silver;",
@@ -1194,18 +1362,20 @@ visvow <- function()
           )
         ),
 
+        navbarMenu("More",
+
         tabPanel
         (
           title = "Help",
           value = "help",
-          
+
           fluidPage
           (
             style = "border: 1px solid silver;",
 
             br(),
             h5(strong("About")),
-            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The program has been developed at the Fryske Akademy (Leeuwarden, The Netherlands) by Wilbert Heeringa under supervision of Hans Van de Velde. Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'www/email.png', height = 19, align = "center"),"."),
+            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The program has been developed at the Fryske Akademy (Leeuwarden, The Netherlands) by Wilbert Heeringa under supervision of Hans Van de Velde. Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'www/email.png', height = 20, align = "center"),"."),
             br(),
             h5(strong("System requirements")),
             p("Visible Vowels runs best on a computer with a monitor with a minimum resolution of 1370 x 870 (width x height). The use of Mozilla Firefox as a web browser is to be preferred."),
@@ -1220,7 +1390,7 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>Vowels</span>"),p("A column that contains the vowel labels should follow. For this column choose 'vowel' as column name. In our example each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. Although in this table each vowel occurs just one time per speaker, multiple pronunciations are possible. In case you want to use IPA characters (as in the example), enter them as Unicode characters. In order to find Unicode IPA characters, use the online IPA Chart Keyboard of Weston Ruter at http://westonruter.github.io/ipa-chart/keyboard/. This column is obligatory."))),
               tags$li(tags$span(HTML("<span style='color:blue'>Categorical variables</span>"),p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'."))),
               tags$li(tags$span(HTML("<span style='color:blue'>Duration</span>"),p("A column which contains the durations of the vowels should follow, with 'duration' as column name. The measurements may be either in seconds or milliseconds. This column is obligatory, but may be empty."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Spectral variabels</span>"),p("Finally, a set of five columns should follow: 'time', f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names may be used. In the example table below f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice. A set should always include all five columns, but the columns 'time', 'f0' and 'f3' may be empty.")))
+              tags$li(tags$span(HTML("<span style='color:blue'>Spectral variabels</span>"),p("Finally, a set of five columns should follow: 'time', f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names may be used. In the example table below f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice. A set should always include all five columns, but the columns 'time', 'f0' and 'F3' may be empty.")))
             )),
 
             br(),
@@ -1273,7 +1443,7 @@ visvow <- function()
         (
           title = "Disclaimer",
           value = "disclaimer",
-          
+
           fluidPage
           (
             style = "border: 1px solid silver;",
@@ -1294,7 +1464,7 @@ visvow <- function()
             p("The disclaimer may be changed from time to time."),
             br()
           )
-        )
+        ))
       )
     ),
 
@@ -1302,12 +1472,12 @@ visvow <- function()
 
     server <- function(input, output, session)
     {
-      observeEvent(input$navBar, 
+      observeEvent(input$navBar,
       {
         if (getUrlHash() == paste0("#", input$navBar)) return()
         updateQueryString(paste0("#", input$navBar), mode = "push")
       })
-      
+
       observeEvent(getUrlHash(),
       {
         Hash <- getUrlHash()
@@ -1315,7 +1485,7 @@ visvow <- function()
         Hash <- gsub("#", "", Hash)
         updateNavbarPage(session, "navBar", selected=Hash)
       })
-      
+
       ##########################################################################
 
       vowelFile <- reactive(
@@ -1504,7 +1674,36 @@ visvow <- function()
         return(vT)
       })
 
-      output$vowelRound <- DT::renderDataTable(vowelRound(), options = list(scrollX = TRUE))
+      output$vowelRound <- DT::renderDataTable(expr = vowelRound(), options = list(scrollX = TRUE))
+
+      vowelExcl <- reactive(
+      {
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
+          return(NULL)
+
+        vowels   <- unique(vowelTab()$vowel)
+        vowels0  <- unique(vowelTab()$vowel)
+        speakers <- unique(vowelTab()$speaker)
+
+        for (i in 1:length(speakers))
+        {
+          vTsub  <- subset(vowelTab(), speaker==speakers[i])
+          vowels <- intersect(vowels,unique(vTsub$vowel))
+        }
+
+        return(setdiff(vowels0,vowels))
+      })
+
+      vowelSame <- reactive(
+      {
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
+          return(NULL)
+
+        if (length(vowelExcl())==0)
+          return(vowelTab())
+        else
+          return(subset(vowelTab(), !is.element(vowelTab()$vowel,vowelExcl())))
+      })
 
       ##########################################################################
 
@@ -1876,19 +2075,7 @@ visvow <- function()
 
       output$selScale0 <- renderUI(
       {
-        options <- c("Hz",
-                     "bark: Schroeder et al. (1979)",
-                     "bark: Zwicker & Terhardt (1980)",
-                     "bark: Traunm\u00FCller (1990)",
-                     "ERB: Greenwood (1961)",
-                     "ERB: Moore & Glasberg (1983)",
-                     "ERB: Glasberg & Moore (1990)",
-                     "ln",
-                     "mel: Fant (1968)",
-                     "mel: O'Shaughnessy (1987)",
-                     "ST")
-
-        selectInput('replyScale0', 'Scale:', options, selected = options[1], selectize=FALSE, multiple=FALSE, width="100%")
+        selectInput('replyScale0', 'Scale:', optionsScale(), selected = optionsScale()[1], selectize=FALSE, multiple=FALSE, width="100%")
       })
 
       output$selRef0 <- renderUI(
@@ -1974,37 +2161,37 @@ visvow <- function()
 
       scaleLab <- function(replyScale)
       {
-        if (replyScale=="Hz")
+        if (replyScale==" Hz")
           return("Hz")
 
-        if (replyScale=="bark: Schroeder et al. (1979)")
+        if (replyScale==" bark I")
           return("bark")
 
-        if (replyScale=="bark: Zwicker & Terhardt (1980)")
+        if (replyScale==" bark II")
           return("bark")
 
-        if (replyScale=="bark: Traunm\u00FCller (1990)")
+        if (replyScale==" bark III")
           return("bark")
 
-        if (replyScale=="ERB: Greenwood (1961)")
+        if (replyScale==" ERB I")
           return("ERB")
 
-        if (replyScale=="ERB: Moore & Glasberg (1983)")
+        if (replyScale==" ERB II")
           return("ERB")
 
-        if (replyScale=="ERB: Glasberg & Moore (1990)")
+        if (replyScale==" ERB III")
           return("ERB")
 
-        if (replyScale=="ln")
+        if (replyScale==" ln")
           return("ln")
 
-        if (replyScale=="mel: Fant (1968)")
+        if (replyScale==" mel I")
           return("mel")
 
-        if (replyScale=="mel: O'Shaughnessy (1987)")
+        if (replyScale==" mel II")
           return("mel")
 
-        if (replyScale=="ST")
+        if (replyScale==" ST")
           return("ST")
       }
 
@@ -2083,7 +2270,7 @@ visvow <- function()
                          geom_line(data=vS, colour="indianred2", size=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(ymin=ll, ymax=ul), alpha=0.2) +
-                         ggtitle(paste(input$title0,paste(input$replyPlot0, collapse = " "))) +
+                         ggtitle(input$title0) +
                          scale_x_continuous(breaks = unique(vT$x)) +
                          xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          facet_wrap(~vT$p) +
@@ -2181,7 +2368,7 @@ visvow <- function()
                          geom_line(data=vS, size=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(x=x, ymin=ll, ymax=ul, fill = l), alpha=0.2, colour=NA) +
-                         ggtitle(paste(input$title0,paste(input$replyPlot0,collapse = " "))) +
+                         ggtitle(input$title0) +
                          scale_x_continuous(breaks = unique(vT$x)) +
                          xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          scale_colour_discrete(name=paste0(paste(input$replyLine0, collapse = " "),"\n")) +
@@ -2394,9 +2581,560 @@ visvow <- function()
 
       ##########################################################################
 
+      global <- reactiveValues(replyScale5=NULL, replyNormal5=NULL)
+
+      observeEvent(input$buttonHelp5, {
+        showModal(modalDialog(easyClose = TRUE, fade = FALSE,
+          title =
+          HTML(paste0("<span style='font-weight: bold; font-size: 17px;'>Evaluation of normalization methods
+                       </span>")),
+
+          HTML(paste0("<span style='font-size: 15px;'>
+
+                       This tab is meant to be used in order to find the most suitable scale and vowel normalization method for your data set.
+                       Choose the settings and press the Go! button. Be prepared that running the evaluation procedures <b>may take some time</b>, depending on the size of your data set.
+
+                       <br><br>
+
+                       In case the speakers have pronounced different sets of vowels, the procedures are run on the basis of the set of vowels that are found across all speakers.
+                       The vowels thus excluded are printed.
+
+                       <br><br>
+
+                       In case multiple vowels of the same vowel category are pronounced by the same speaker, their formant frequencies are averaged.
+                       If a variable is included in the normalization process that represents different conditions under which these vowels were pronounced, they are averaged per condition.
+
+                       <br><br>
+
+                       The evaluation methods of Flynn & Foulkes (2011) and Van der Harst (2011) are available.
+                       When using the methods of Flynn, we do not not assume the vowel space to be a quadrilateral, but we calculate the convex hull which allows us to use the procedure for vowel spaces of any shape.
+
+                       <br><br>
+
+                       The results are presented as a table where the columns represent the scale conversion methods and the rows the normalization procedures.
+                       Each score is shown on a background with a color somewhere in between white and orange.
+                       The more orange the background is, the better the result.
+                       Note that for some tests larger scores represent better results, and for other tests smaller scores represent better results.
+
+                       <br><br>
+
+                       For 'Hz' frequencies all normalization methods are given.
+                       In order to avoid double scaling, for the other scales no scores are given for normalization methods that implicitely scale frequencies themselves.
+
+                       <br><br>
+
+                       When F3 is checked, only those normalization procedures are evaluated that are able to normalize F3 scores.
+                       Moreover, only results of the evaluation methods of Van der Harst (2011) are shown, since the evaluation methods of Flynn & Foulkes work only in F1/F2 space.
+
+                       <br><br>
+
+                       When f0 and/or F3 frequencies are not given in the data set, normalization procedures that use f0 and/or F3 for normalizing are left out in the results.
+
+                       <br><br>
+
+                       References:
+
+                       <br><br>
+
+                       Flynn, N. (2011), Comparing Vowel Formant Normalisation Procedures. In: <i>York Papers in Linguistics Series 2</i>, pp. 1-28.
+                       <br>
+                       Flynn, N., & Foulkes, P. (2011). Comparing Vowel Formant Normalization Methods. In <i>Proceedings of the 17th International Congress of Phonetic Sciences, 17-21 August 2011 Hongkong</i>, pp. 683-686.
+                       <br>
+                       Van der Harst, S. (2011). <i>The Vowel Space Paradox. A Sociophonetic Study on Dutch</i>. Ph.D. dissertation, Radboud University of Nijmegen, Utrecht: LOT.
+                       <br>
+
+                       </span>")),
+
+          footer = modalButton("OK")
+        ))
+      })
+
+      output$selTimes5 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        timeCode     <- getTimeCode()
+        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
+        nColumns     <- ncol(vowelTab())
+        nPoints      <- (nColumns - (indexVowel + 1))/5
+
+        checkboxGroupInput('replyTimes5', 'Time points to be included:', timeCode, selected = Round(nPoints/2), TRUE)
+      })
+
+      output$selTimesN5 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        timeCode     <- getTimeCode()
+        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
+        nColumns     <- ncol(vowelTab())
+        nPoints      <- (nColumns - (indexVowel + 1))/5
+
+        checkboxGroupInput('replyTimesN5', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
+      })
+
+      output$selVars51 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+
+        if (indexVowel > 2)
+          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
+        else
+          options <- NULL
+
+        selectInput('replyVars51', 'Anatomic var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
+      })
+
+      output$selVars52 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+
+        if (indexVowel > 2)
+          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
+        else
+          options <- NULL
+
+        selectInput('replyVars52', 'Socioling. var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
+      })
+
+      emptyF3 <- reactive(
+      {
+        req(vowelTab())
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+        return(sum(vowelTab()[,indexVowel+6]==0)==nrow(vowelTab()))
+      })
+
+      output$selF35 <- renderUI(
+      {
+        if (!emptyF3())
+        {
+          tagList(
+            p(style='font-weight: bold;', "Include:"),
+            checkboxInput("replyF35", "F3", value = FALSE, width = NULL)
+          )
+        }
+      })
+
+      output$exclVow5 <- renderUI(
+      {
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
+          return(NULL)
+
+        if (length(vowelExcl())>0)
+        {
+          vowels <- ""
+
+          for (i in 1:length(vowelExcl()))
+            vowels <- paste(vowels, vowelExcl()[i])
+
+          return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br>"))))
+        }
+        else
+          return(NULL)
+      })
+
+      output$selEval5 <- renderUI(
+      {
+        if (input$selAuth5=="Flynn & Foulkes (2011)")
+        {
+          return(radioButtons(inputId  = 'selEval51',
+                              label    = 'Show results of method:',
+                              choices  = c("minimize variance of vowel spaces",
+                                           "maximize overlap of vowel spaces"),
+                              selected =   "minimize variance of vowel spaces",
+                              inline   = FALSE))
+        }
+
+        if (input$selAuth5=="Van der Harst (2011)")
+        {
+          return(radioButtons(inputId  = 'selEval52',
+                              label    = 'Show results of method:',
+                              choices  = c("preserve phonemic variation",
+                                           "minimize anatomic variation",
+                                           "preserve sociolinguistic variation"),
+                              selected =   "preserve phonemic variation",
+                              inline   = FALSE))
+        }
+      })
+
+      vowelScale5 <- reactive(
+      {
+        return(vowelScale(vowelSame(), global$replyScale5, 50))
+      })
+
+      vowelNorm5 <- reactive(
+      {
+        indexVowel <- grep("^vowel$", colnames(vowelScale5()))
+        nColumns   <- ncol(vowelScale5())
+        nPoints    <- (nColumns - (indexVowel + 1))/5
+
+        if (!is.null(input$replyTimesN5))
+          replyTimesN <- input$replyTimesN5
+        else
+          return(NULL)
+
+        vL1 <- vowelLong1(vowelScale5(),replyTimesN)
+        vL2 <- vowelLong2(vL1)
+        vL3 <- vowelLong3(vL1)
+        vL4 <- vowelLong4(vL1)
+
+        return(vowelNormF(vowelScale5(), vL1, vL2, vL3, vL4, global$replyNormal5))
+      })
+
+      vowelSubS5 <- reactive(
+      {
+        if (is.null(vowelNorm5()) || (nrow(vowelNorm5())==0)  || (length(input$replyTimes5)==0))
+          return(NULL)
+
+        vT <- vowelNorm5()
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+        nPoints <- (ncol(vowelTab()) - (indexVowel + 1))/5
+
+        if ((nrow(vT)>0) && (max(as.numeric(input$replyTimes5))<=nPoints))
+        {
+          if ((!is.null(input$replyVars51)) && (length(input$replyVars51) > 0))
+          {
+            indices <- which(colnames(vT) %in% input$replyVars51)
+            vT$vars1 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
+          }
+          else
+            vT$vars1 <- "none"
+
+          if ((!is.null(input$replyVars52)) && (length(input$replyVars52) > 0))
+          {
+            indices <- which(colnames(vT) %in% input$replyVars52)
+            vT$vars2 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
+          }
+          else
+            vT$vars2 <- "none"
+
+          vT0 <- data.frame()
+
+          for (i in (1:length(input$replyTimes5)))
+          {
+            Code <- strtoi(input$replyTimes5[i])
+
+            indexF1 <- indexVowel + 4 + ((Code-1) * 5)
+            indexF2 <- indexVowel + 5 + ((Code-1) * 5)
+            indexF3 <- indexVowel + 6 + ((Code-1) * 5)
+
+            if (any(is.na(vT[,indexF1])))
+              vT[,indexF1] <- 0
+            if (any(is.na(vT[,indexF2])))
+              vT[,indexF2] <- 0
+            if (any(is.na(vT[,indexF3])))
+              vT[,indexF3] <- 0
+
+            vT0 <- rbind(vT0, data.frame(vowel   = vT$vowel    ,
+                                         speaker = vT$speaker  ,
+                                         time    = i           ,
+                                         vars1   = vT$vars1    ,
+                                         vars2   = vT$vars2    ,
+                                         F1      = vT[,indexF1],
+                                         F2      = vT[,indexF2],
+                                         F3      = vT[,indexF3]))
+          }
+
+          return(aggregate(cbind(F1,F2,F3)~vowel+speaker+time+vars1+vars2, data=vT0, FUN=mean))
+        }
+        else
+          return(data.frame())
+      })
+
+      asPolySet <- function(df, PID)
+      {
+        df$PID <- PID
+        df$POS <- 1:nrow(df)
+        return(df)
+      }
+
+      perc <- function(yp)
+      {
+        eql <- nrow(subset(yp, yp[,1]==yp[,2]))
+        all <- nrow(yp)
+
+        return((eql/all)*100)
+      }
+
+      round2 <- function(x, n=0)
+      {
+        scale<-10^n
+        return(trunc(x*scale+sign(x)*0.5)/scale)
+      }
+
+      evalResults <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
+
+        allScalesAllowed <- c("",
+                              " Peterson",
+                              " Syrdal & Gopal",
+                              " Thomas & Kendall",
+                              " Gerstman",
+                              " Lobanov",
+                              " Watt & Fabricius",
+                              " Fabricius et al.",
+                              " Heeringa & Van de Velde",
+                              " Nearey I")
+
+        matrix1  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix2  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix3  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix4  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix5  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+
+         loop <- 0
+        nLoop <- (length(Scale)-1) * length(Normal)
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 1:(length(Scale)-1))
+          {
+            global$replyScale5 <- Scale[i]
+
+            for (j in 1:length(Normal))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
+              {
+                global$replyNormal5 <- Normal[j]
+
+                vT <- vowelSubS5()
+
+                # Flynn & Foulkes (2011)
+
+                if (emptyF3() || !input$replyF35)
+                {
+                  speakers <- unique(vT$speaker)
+
+                  vTsub <- subset(vT, speaker==speakers[1])
+                  indices <- grDevices::chull(vTsub$F1, vTsub$F2)
+                  area <- abs(polyarea(vTsub$F1[indices], vTsub$F2[indices]))
+
+                  polySet <- asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), 1)
+
+                  for (k in 2:length(speakers))
+                  {
+                    vTsub <- subset(vT, speaker==speakers[k])
+                    indices <- grDevices::chull(vTsub$F1, vTsub$F2)
+                    area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
+
+                    polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
+                  }
+
+                  matrix1[j,i] <- (sd(area)/mean(area))^2
+
+                  ##
+
+                  inter <- joinPolys(polySet, operation="INT"  )
+                  union <- joinPolys(polySet, operation="UNION")
+
+                  areaI <- abs(polyarea(inter$X, inter$Y))
+                  areaU <- abs(polyarea(union$X, union$Y))
+
+                  matrix2[j,i] <- areaI / areaU
+                }
+                else
+                {
+                  matrix1[j,i] <- NA
+                  matrix2[j,i] <- NA
+                }
+
+                # Van der Harst (2011)
+
+                if (emptyF3() || !input$replyF35)
+                  model <- lda(factor(vowel)~cbind(F1,F2    ), data=vT)
+                else
+                  model <- lda(factor(vowel)~cbind(F1,F2, F3), data=vT)
+
+                p <- predict(model)
+                yp <- cbind(as.character(vT$vowel), as.character(p$class))
+                matrix3[j,i] <- perc(yp)
+
+                ##
+
+                if (length(unique(vT$vars1)) > 1)
+                {
+                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
+
+                  vTsub <- subset(vT, (vowel==Segments$vowel[1]) & (time==Segments$time[1]))
+                  vars1 <- vTsub$vars1
+
+                  if (emptyF3() || !input$replyF35)
+                    Preds <- cbind(vTsub$F1, vTsub$F2)
+                  else
+                    Preds <- cbind(vTsub$F1, vTsub$F2, vTsub$F3)
+
+                  for (k in 2:nrow(Segments))
+                  {
+                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
+
+                    if (emptyF3() || !input$replyF35)
+                      Preds <- cbind(Preds, vTsub$F1, vTsub$F2)
+                    else
+                      Preds <- cbind(Preds, vTsub$F1, vTsub$F2, vTsub$F3)
+                  }
+
+                  model <- lda(x=Preds[, 1:ncol(Preds)], grouping=vars1)
+                  p <- predict(model)
+                  yp <- cbind(as.character(vT$vars1), as.character(p$class))
+                  matrix4[j,i] <- perc(yp)
+                }
+                else
+                  matrix4[j,i] <- NA
+
+                ##
+
+                if (length(unique(vT$vars2)) > 1)
+                {
+                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
+                  Perc <- c()
+
+                  for (k in 1:nrow(Segments))
+                  {
+                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
+
+                    if (emptyF3() || !input$replyF35)
+                      model <- lda(factor(vars2)~cbind(F1,F2   ), data=vTsub)
+                    else
+                      model <- lda(factor(vars2)~cbind(F1,F2,F3), data=vTsub)
+
+                    p <- predict(model)
+                    yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
+                    Perc <- c(Perc, perc(yp))
+                  }
+
+                  matrix5[j,i] <- mean(Perc)
+                }
+                else
+                  matrix5[j,i] <- NA
+              }
+            }
+          }
+        })
+
+        matrix1 <- round2(matrix1, n=3)
+        matrix2 <- round2(matrix2, n=3)
+        matrix3 <- round2(matrix3, n=3)
+        matrix4 <- round2(matrix4, n=3)
+        matrix5 <- round2(matrix5, n=3)
+
+        matrix1  <- as.data.frame(matrix1)
+        matrix2  <- as.data.frame(matrix2)
+        matrix3  <- as.data.frame(matrix3)
+        matrix4  <- as.data.frame(matrix4)
+        matrix5  <- as.data.frame(matrix5)
+
+        matrix1[is.na(matrix1)] <- "-"
+        matrix2[is.na(matrix2)] <- "-"
+        matrix3[is.na(matrix3)] <- "-"
+        matrix4[is.na(matrix4)] <- "-"
+        matrix5[is.na(matrix5)] <- "-"
+
+        colnames(matrix1) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix2) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix3) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix4) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix5) <- Scale[1:(length(Scale)-1)]
+
+        matrix1 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix1)
+        matrix2 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix2)
+        matrix3 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix3)
+        matrix4 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix4)
+        matrix5 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix5)
+
+        colnames(matrix1)[1] <- " "
+        colnames(matrix2)[1] <- " "
+        colnames(matrix3)[1] <- " "
+        colnames(matrix4)[1] <- " "
+        colnames(matrix5)[1] <- " "
+
+        return(list(matrix1, matrix2, matrix3, matrix4, matrix5))
+      })
+
+      output$graph5 <- renderFormattable(
+      {
+        if (input$selAuth5=="Flynn & Foulkes (2011)")
+          req(input$selEval51)
+
+        if (input$selAuth5=="Van der Harst (2011)")
+          req(input$selEval52)
+
+        if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "minimize variance of vowel spaces"))
+        {
+          df <- evalResults()[[1]]
+          col1 <- "orange"
+          col2 <- "white"
+        }
+
+        if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "maximize overlap of vowel spaces"))
+        {
+          df <- evalResults()[[2]]
+          col1 <- "white"
+          col2 <- "orange"
+        }
+
+        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve phonemic variation"))
+        {
+          df <- evalResults()[[3]]
+          col1 <- "white"
+          col2 <- "orange"
+        }
+
+        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "minimize anatomic variation"))
+        {
+          df <- evalResults()[[4]]
+          col1 <- "orange"
+          col2 <- "white"
+        }
+
+        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve sociolinguistic variation"))
+        {
+          df <- evalResults()[[5]]
+          col1 <- "white"
+          col2 <- "orange"
+        }
+
+        formattable(df, align = rep("l", 11),
+                        list(' '         = formatter("span", style = ~ style(display = "block", "font.weight" = "bold")),
+                             ' Hz'       = color_tile(col1, col2),
+                             ' bark I'   = color_tile(col1, col2),
+                             ' bark II'  = color_tile(col1, col2),
+                             ' bark III' = color_tile(col1, col2),
+                             ' ERB I'    = color_tile(col1, col2),
+                             ' ERB II'   = color_tile(col1, col2),
+                             ' ERB III'  = color_tile(col1, col2),
+                             ' ln'       = color_tile(col1, col2),
+                             ' mel I'    = color_tile(col1, col2),
+                             ' mel II'   = color_tile(col1, col2)
+                        )
+                   )
+      })
+
+      output$Graph5 <- renderUI(
+      {
+        formattableOutput("graph5", height="500px")
+      })
+
+      ##########################################################################
+
       replyTimes10  <- reactive(input$replyTimes1)
       replyTimes1   <- debounce(replyTimes10 , 2000)
-  
+
       replyTimesN10 <- reactive(input$replyTimesN1)
       replyTimesN1  <- debounce(replyTimesN10, 2000)
 
@@ -2414,10 +3152,10 @@ visvow <- function()
         nColumns   <- ncol(vowelScale1())
         nPoints    <- (nColumns - (indexVowel + 1))/5
 
-        if (nPoints==max(as.numeric(replyTimesN1())))
+        if (!is.null(replyTimesN1()))
           replyTimesN <- replyTimesN1()
         else
-          replyTimesN <- as.character(Round(nPoints/2))
+          return(NULL)
 
         vL1 <- vowelLong1(vowelScale1(),replyTimesN)
         vL2 <- vowelLong2(vL1)
@@ -2434,8 +3172,8 @@ visvow <- function()
 
         vT <- vowelNorm1()
 
-        vT$indexColor <- fuseCols(vowelNorm1(),input$replyColor)
-        vT$indexShape <- fuseCols(vowelNorm1(),input$replyShape)
+        vT$indexColor <- fuseCols(vowelNorm1(),input$replyColor1)
+        vT$indexShape <- fuseCols(vowelNorm1(),input$replyShape1)
         vT$indexPlot  <- fuseCols(vowelNorm1(),input$replyPlot1)
 
         indexVowel <- grep("^vowel$", colnames(vowelNorm1()))
@@ -2470,13 +3208,13 @@ visvow <- function()
 
         ### check end
 
-        if (length(input$catColor)>0)
+        if (length(input$catColor1)>0)
         {
           vT1 <- data.frame()
 
-          for (q in (1:length(input$catColor)))
+          for (q in (1:length(input$catColor1)))
           {
-            vT1 <- rbind(vT1, subset(vT, indexColor==input$catColor[q]))
+            vT1 <- rbind(vT1, subset(vT, indexColor==input$catColor1[q]))
           }
         }
         else
@@ -2484,13 +3222,13 @@ visvow <- function()
           vT1 <- vT
         }
 
-        if (length(input$catShape)>0)
+        if (length(input$catShape1)>0)
         {
           vT2 <- data.frame()
 
-          for (q in (1:length(input$catShape)))
+          for (q in (1:length(input$catShape1)))
           {
-            vT2 <- rbind(vT2, subset(vT1, indexShape==input$catShape[q]))
+            vT2 <- rbind(vT2, subset(vT1, indexShape==input$catShape1[q]))
           }
         }
         else
@@ -2528,12 +3266,12 @@ visvow <- function()
             indexF2 <- indexVowel + 5 + ((Code-1) * 5)
             indexF3 <- indexVowel + 6 + ((Code-1) * 5)
 
-            if (length(input$catColor)>0)
+            if (length(input$catColor1)>0)
               Color <- vT$indexColor
             else
               Color <- rep("none",nrow(vT))
 
-            if (length(input$catShape)>0)
+            if (length(input$catShape1)>0)
               Shape <- vT$indexShape
             else
               Shape <- rep("none",nrow(vT))
@@ -2655,18 +3393,7 @@ visvow <- function()
 
       output$selScale1 <- renderUI(
       {
-        options <- c("Hz",
-                     "bark: Schroeder et al. (1979)",
-                     "bark: Zwicker & Terhardt (1980)",
-                     "bark: Traunm\u00FCller (1990)",
-                     "ERB: Greenwood (1961)",
-                     "ERB: Moore & Glasberg (1983)",
-                     "ERB: Glasberg & Moore (1990)",
-                     "ln",
-                     "mel: Fant (1968)",
-                     "mel: O'Shaughnessy (1987)")
-
-        selectInput('replyScale1', 'Scale:', options, selected = options[1], selectize=FALSE, multiple=FALSE)
+        selectInput('replyScale1', 'Scale:', optionsScale()[1:(length(optionsScale())-1)], selected = optionsScale()[1], selectize=FALSE, multiple=FALSE)
       })
 
       onlyF1F2 <- function()
@@ -2682,82 +3409,7 @@ visvow <- function()
         if (is.null(vowelTab()) || length(input$replyScale1)==0)
           return(NULL)
 
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-
-        ###
-
-        options1 <- c()
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (onlyF1F2()))
-          options1 <- c(options1, "Peterson (1951)" = " Peterson")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale1=="Hz"))
-          options1 <- c(options1, "Sussman (1986)" = " Sussman")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (onlyF1F2()))
-          options1 <- c(options1, "Syrdal & Gopal (1986)" = " Syrdal & Gopal")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (input$replyScale1=="Hz"))
-          options1 <- c(options1, "Miller (1989)" = " Miller")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (onlyF1F2()))
-          options1 <- c(options1, "Thomas & Kendall (2007)" = " Thomas & Kendall")
-
-        ###
-
-        options2 <- c()
-
-          options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
-
-        ###
-
-        options3 <- c()
-
-          options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
-
-        if (onlyF1F2())
-          options3 <- c(options3, "Watt & Fabricius (2002)" = " Watt & Fabricius")
-
-        if (onlyF1F2())
-          options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
-
-        if (onlyF1F2())
-          options3 <- c(options3, "Heeringa & Van de Velde (2018)" = " Heeringa & Van de Velde")
-
-        ###
-
-        options4 <- c()
-
-        if  (input$replyScale1=="Hz")
-          options4 <- c(options4, "Nearey (1978) I" = " Nearey I")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale1=="Hz"))
-          options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
-
-        if ((onlyF1F2()) &
-            (input$replyScale1=="Hz"))
-          options4 <- c(options4, "Labov (2006) I" = " Labov I")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale1=="Hz"))
-          options4 <- c(options4, "Labov (2006) II" = " Labov II")
-
-        ###
-
-        options <- c("None" = "", list(" Formant-ratio normalization"=options1,
-                                       " Range normalization"        =options2,
-                                       " Centroid normalization"     =options3,
-                                       " Log-mean normalization"     =options4))
-
-        selectInput('replyNormal1', 'Normalization:', options, selected = options[1], selectize=FALSE, multiple=FALSE)
+        selectInput('replyNormal1', 'Normalization:', optionsNormal(vowelTab(), input$replyScale1, onlyF1F2()), selected = optionsNormal(vowelTab(), input$replyScale1, onlyF1F2())[1], selectize=FALSE, multiple=FALSE)
       })
 
       output$selTimesN <- renderUI(
@@ -2820,7 +3472,7 @@ visvow <- function()
         }
       })
 
-      output$selColor <- renderUI(
+      output$selColor1 <- renderUI(
       {
         if (is.null(vowelTab()))
           return(NULL)
@@ -2831,23 +3483,23 @@ visvow <- function()
         if (!input$ltf1)
           options <- c(colnames(vowelTab()[indexVowel]),options)
 
-        selectInput('replyColor', 'Color variable:', options, selected=options[1], multiple=TRUE, selectize=FALSE, size=3, width="100%")
+        selectInput('replyColor1', 'Color variable:', options, selected=options[1], multiple=TRUE, selectize=FALSE, size=3, width="100%")
       })
 
-      output$catColor <- renderUI(
+      output$catColor1 <- renderUI(
       {
         if (is.null(vowelTab()))
           return(NULL)
 
-        if (length(input$replyColor)>0)
-          options <- unique(fuseCols(vowelTab(),input$replyColor))
+        if (length(input$replyColor1)>0)
+          options <- unique(fuseCols(vowelTab(),input$replyColor1))
         else
           options <- NULL
 
-        selectInput('catColor', 'Select colors:', options, multiple=TRUE, selectize = FALSE, size=3, width="100%")
+        selectInput('catColor1', 'Select colors:', options, multiple=TRUE, selectize = FALSE, size=3, width="100%")
       })
 
-      output$selShape <- renderUI(
+      output$selShape1 <- renderUI(
       {
         if (is.null(vowelTab()))
           return(NULL)
@@ -2869,25 +3521,25 @@ visvow <- function()
           options <- "none"
         }
 
-        selectInput('replyShape', 'Shape variable:', options, selected = options[1], multiple=TRUE, selectize=FALSE, size=3, width="100%")
+        selectInput('replyShape1', 'Shape variable:', options, selected = options[1], multiple=TRUE, selectize=FALSE, size=3, width="100%")
       })
 
-      output$catShape <- renderUI(
+      output$catShape1 <- renderUI(
       {
         if  (is.null(vowelTab()))
           return(NULL)
 
-        if ((length(input$replyShape)>0) && (length(replyTimes1())==1) && (input$axisZ=="--"))
+        if ((length(input$replyShape1)>0) && (length(replyTimes1())==1) && (input$axisZ=="--"))
         {
           if (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)
             options <- NULL
           else
-            options <- unique(fuseCols(vowelTab(),input$replyShape))
+            options <- unique(fuseCols(vowelTab(),input$replyShape1))
         }
         else
           options <- NULL
 
-        selectInput('catShape', 'Select shapes:', options, multiple=TRUE, selectize = FALSE, size=3, width="100%")
+        selectInput('catShape1', 'Select shapes:', options, multiple=TRUE, selectize = FALSE, size=3, width="100%")
       })
 
       output$selPlot1 <- renderUI(
@@ -2981,16 +3633,16 @@ visvow <- function()
 
       numColor <- function()
       {
-        if ((length(input$replyColor)>0) && (length(input$catColor)>0))
-          return(length(input$catColor))
+        if ((length(input$replyColor1)>0) && (length(input$catColor1)>0))
+          return(length(input$catColor1))
         else
           return(0)
       }
 
       numShape <- function()
       {
-        if ((length(input$replyShape)>0) && (length(input$catShape)>0))
-          return(length(input$catShape))
+        if ((length(input$replyShape1)>0) && (length(input$catShape1)>0))
+          return(length(input$catShape1))
         else
           return(0)
       }
@@ -3112,7 +3764,7 @@ visvow <- function()
 
           if (length(input$catPlot1)>0)
           {
-            Title <- ggtitle(paste(input$title1,paste(input$replyPlot1, collapse = " ")))
+            Title <- ggtitle(input$title1)
             Facet <- facet_wrap(~plot)
           }
           else
@@ -3134,7 +3786,7 @@ visvow <- function()
 
           graphics::plot(Basis + scaleX + scaleY + Title + Facet +
                          scale_color_manual(values=colPalette1(length(unique(vT$color)))) +
-                         labs(colour=paste(input$replyColor, collapse = " "),shape=paste(input$replyShape, collapse = " ")) +
+                         labs(colour=paste(input$replyColor1, collapse = " "),shape=paste(input$replyShape1, collapse = " ")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint1b), family=input$replyFont1b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -3187,7 +3839,7 @@ visvow <- function()
           {
             chulls <- ddply(vT, .(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
 
-            if ((length(unique(vT$color))==1) | (as.character(input$replyColor)[1]=="vowel"))
+            if ((length(unique(vT$color))==1) | (as.character(input$replyColor1)[1]=="vowel"))
             {
               Hull <- geom_polygon(data=chulls, aes(x=X, y=Y, group=color, fill=color), alpha=0.1)
               Fill <- scale_fill_manual(values=colPalette1(length(unique(vT$color))))
@@ -3234,7 +3886,7 @@ visvow <- function()
               Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel)
             else
             {
-              if ((length(unique(vT$color))==1) | (as.character(input$replyColor)[1]=="vowel"))
+              if ((length(unique(vT$color))==1) | (as.character(input$replyColor1)[1]=="vowel"))
               {
                 Ellipse <- stat_ellipse(position="identity", type="norm", level=input$replyLevel, geom="polygon", alpha=0.3)
                 Fill <- scale_fill_manual(values=colPalette1(length(unique(vT$color))))
@@ -3267,7 +3919,7 @@ visvow <- function()
 
           if (length(input$catPlot1)>0)
           {
-            Title <- ggtitle(paste(input$title1,paste(input$replyPlot1, collapse = " ")))
+            Title <- ggtitle(input$title1)
             Facet <- facet_wrap(~plot)
           }
           else
@@ -3283,7 +3935,7 @@ visvow <- function()
 
           graphics::plot(Basis + Points + Hull +Spokes + Ellipse + Centers + scaleX + scaleY + Title + Facet +
                          scale_color_manual(values=colPalette1(length(unique(vT$color)))) + Fill +
-                         labs(colour=paste(input$replyColor, collapse = " "), fill=paste(input$replyColor, collapse = " ")) +
+                         labs(colour=paste(input$replyColor1, collapse = " "), fill=paste(input$replyColor1, collapse = " ")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint1b), family=input$replyFont1b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -3330,7 +3982,7 @@ visvow <- function()
 
           if (length(input$catPlot1)>0)
           {
-            Title <- ggtitle(paste(input$title1,paste(input$replyPlot1, collapse = " ")))
+            Title <- ggtitle(input$title1)
             Facet <- facet_wrap(~plot)
           }
           else
@@ -3347,7 +3999,7 @@ visvow <- function()
           graphics::plot(Basis + scaleX + scaleY + Title + Facet +
                          geom_path(aes(group = index), arrow = arrow(ends = "last", length = unit(0.1, "inches")), size=0.7) +
                          scale_color_manual(values=colPalette1(length(unique(vT$color)))) +
-                         labs(colour=paste(input$replyColor, collapse = " ")) +
+                         labs(colour=paste(input$replyColor1, collapse = " ")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint1b), family=input$replyFont1b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -4152,18 +4804,7 @@ visvow <- function()
 
       output$selScale4 <- renderUI(
       {
-        options <- c("Hz",
-                     "bark: Schroeder et al. (1979)",
-                     "bark: Zwicker & Terhardt (1980)",
-                     "bark: Traunm\u00FCller (1990)",
-                     "ERB: Greenwood (1961)",
-                     "ERB: Moore & Glasberg (1983)",
-                     "ERB: Glasberg & Moore (1990)",
-                     "ln",
-                     "mel: Fant (1968)",
-                     "mel: O'Shaughnessy (1987)")
-
-        selectInput('replyScale4', 'Scale:', options, selected = options[1], selectize=FALSE, multiple=FALSE)
+        selectInput('replyScale4', 'Scale:', optionsScale()[1:(length(optionsScale())-1)], selected = optionsScale()[1], selectize=FALSE, multiple=FALSE)
       })
 
       output$selMethod4 <- renderUI(
@@ -4301,29 +4942,29 @@ visvow <- function()
         {
           if (input$replyGraph4=="Dot plot")
           {
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,2], group=1)) +
-                           geom_line(colour="indianred2", size=1) + geom_point(colour="indianred2", size=3) +
-                           geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(input$title4) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,2], group=1)) +
+                  geom_point(colour="indianred2", size=3) +
+                  geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
           else
 
           if (input$replyGraph4=="Bar chart")
           {
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,2])) +
-                           geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(input$title4) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,2])) +
+                  geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
         }
         else
@@ -4332,32 +4973,32 @@ visvow <- function()
         {
           if (input$replyGraph4=="Dot plot")
           {
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], group=1)) +
-                           geom_line(colour="indianred2", size=1) + geom_point(colour="indianred2", size=3) +
-                           geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(paste(input$title4,paste(input$replyPlot4, collapse = " "))) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           facet_wrap(~vowelSub4()[,2]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], group=1)) +
+                  geom_point(colour="indianred2", size=3) +
+                  geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  facet_wrap(~vowelSub4()[,2]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
 
           else
 
           if (input$replyGraph4=="Bar chart")
           {
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3])) +
-                           geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(paste(input$title4,paste(input$replyPlot4, collapse = " "))) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           facet_wrap(~vowelSub4()[,2]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3])) +
+                  geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  facet_wrap(~vowelSub4()[,2]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
           else {}
         }
@@ -4367,19 +5008,19 @@ visvow <- function()
         {
           if (input$replyGraph4=="Dot plot")
           {
-            pd <- position_dodge(0.1)
+            pd <- position_dodge(0.7)
 
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], group=vowelSub4()[,2], color=vowelSub4()[,2])) +
-                           geom_line(size=1, position=pd) + geom_point(size=3, position=pd) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(input$title4) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           scale_colour_discrete(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], group=vowelSub4()[,2], color=vowelSub4()[,2])) +
+                  geom_point(size=3, position=pd) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  scale_colour_discrete(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'points'),
+                        aspect.ratio   =0.67)
           }
           else
 
@@ -4387,18 +5028,24 @@ visvow <- function()
           {
             pd <- position_dodge(0.9)
 
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], fill=vowelSub4()[,2])) +
-                           geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(input$title4) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           scale_fill_hue(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,3], fill=vowelSub4()[,2])) +
+                  geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  scale_fill_hue(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'lines'),
+                        aspect.ratio   =0.67)
           }
+          else {}
+
+          if (input$replyXaxis4==input$replyLine4)
+            gp <- gp + theme(axis.title.x=element_blank(),
+                             axis.text.x =element_blank(),
+                             axis.ticks.x=element_blank())
           else {}
         }
         else
@@ -4407,20 +5054,20 @@ visvow <- function()
         {
           if (input$replyGraph4=="Dot plot")
           {
-            pd <- position_dodge(0.1)
+            pd <- position_dodge(0.5)
 
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,4], group=vowelSub4()[,2], color=vowelSub4()[,2])) +
-                           geom_line(size=1, position=pd) + geom_point(size=3, position=pd) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(paste(input$title4,paste(input$replyPlot4, collapse = " "))) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           scale_colour_discrete(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
-                           facet_wrap(~vowelSub4()[,3]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,4], group=vowelSub4()[,2], color=vowelSub4()[,2])) +
+                  geom_point(size=3, position=pd) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  scale_colour_discrete(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
+                  facet_wrap(~vowelSub4()[,3]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'points'),
+                        aspect.ratio   =0.67)
           }
           else
 
@@ -4428,22 +5075,30 @@ visvow <- function()
           {
             pd <- position_dodge(0.9)
 
-            graphics::plot(ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,4], fill=vowelSub4()[,2])) +
-                           geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(paste(input$title4,paste(input$replyPlot4, collapse = " "))) +
-                           xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
-                           scale_fill_hue(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
-                           facet_wrap(~vowelSub4()[,3]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub4(), aes(x=vowelSub4()[,1], y=vowelSub4()[,4], fill=vowelSub4()[,2])) +
+                  geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title4) +
+                  xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
+                  scale_fill_hue(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
+                  facet_wrap(~vowelSub4()[,3]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'lines'),
+                        aspect.ratio   =0.67)
           }
+          else {}
+
+          if (input$replyXaxis4==input$replyLine4)
+            gp <- gp + theme(axis.title.x=element_blank(),
+                             axis.text.x =element_blank(),
+                             axis.ticks.x=element_blank())
           else {}
         }
         else {}
+
+        return(graphics::plot(gp))
       }
 
       res4 <- function()
@@ -4935,29 +5590,29 @@ visvow <- function()
         {
           if (input$replyGraph2=="Dot plot")
           {
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,2], group=1)) +
-                           geom_line(colour="indianred2", size=1) + geom_point(colour="indianred2", size=3) +
-                           geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(input$title2) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,2], group=1)) +
+                  geom_point(colour="indianred2", size=3) +
+                  geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
           else
 
           if (input$replyGraph2=="Bar chart")
           {
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,2])) +
-                           geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(input$title2) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,2])) +
+                  geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
         }
         else
@@ -4966,32 +5621,32 @@ visvow <- function()
         {
           if (input$replyGraph2=="Dot plot")
           {
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], group=1)) +
-                           geom_line(colour="indianred2", size=1) + geom_point(colour="indianred2", size=3) +
-                           geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(paste(input$title2,paste(input$replyPlot2, collapse = " "))) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           facet_wrap(~vowelSub2()[,2]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], group=1)) +
+                  geom_point(colour="indianred2", size=3) +
+                  geom_errorbar(colour="indianred2", aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  facet_wrap(~vowelSub2()[,2]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
 
           else
 
           if (input$replyGraph2=="Bar chart")
           {
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3])) +
-                           geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
-                           ggtitle(paste(input$title2,paste(input$replyPlot2, collapse = " "))) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           facet_wrap(~vowelSub2()[,2]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3])) +
+                  geom_bar(stat="identity", colour="black", fill="indianred2", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  facet_wrap(~vowelSub2()[,2]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        aspect.ratio   =0.67)
           }
           else {}
         }
@@ -5001,19 +5656,19 @@ visvow <- function()
         {
           if (input$replyGraph2=="Dot plot")
           {
-            pd <- position_dodge(0.1)
+            pd <- position_dodge(0.7)
 
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], group=vowelSub2()[,2], color=vowelSub2()[,2])) +
-                           geom_line(size=1, position=pd) + geom_point(size=3, position=pd) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(input$title2) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           scale_colour_discrete(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], group=vowelSub2()[,2], color=vowelSub2()[,2])) +
+                  geom_point(size=3, position=pd) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  scale_colour_discrete(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'points'),
+                        aspect.ratio   =0.67)
           }
           else
 
@@ -5021,18 +5676,24 @@ visvow <- function()
           {
             pd <- position_dodge(0.9)
 
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], fill=vowelSub2()[,2])) +
-                           geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(input$title2) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           scale_fill_hue(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,3], fill=vowelSub2()[,2])) +
+                  geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  scale_fill_hue(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'lines'),
+                        aspect.ratio   =0.67)
           }
+          else {}
+
+          if (input$replyXaxis2==input$replyLine2)
+            gp <- gp + theme(axis.title.x=element_blank(),
+                             axis.text.x =element_blank(),
+                             axis.ticks.x=element_blank())
           else {}
         }
         else
@@ -5041,20 +5702,20 @@ visvow <- function()
         {
           if (input$replyGraph2=="Dot plot")
           {
-            pd <- position_dodge(0.1)
+            pd <- position_dodge(0.5)
 
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,4], group=vowelSub2()[,2], color=vowelSub2()[,2])) +
-                           geom_line(size=1, position=pd) + geom_point(size=3, position=pd) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(paste(input$title2,paste(input$replyPlot2, collapse = " "))) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           scale_colour_discrete(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
-                           facet_wrap(~vowelSub2()[,3]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,4], group=vowelSub2()[,2], color=vowelSub2()[,2])) +
+                  geom_point(size=3, position=pd) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  scale_colour_discrete(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
+                  facet_wrap(~vowelSub2()[,3]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'points'),
+                        aspect.ratio   =0.67)
           }
           else
 
@@ -5062,22 +5723,30 @@ visvow <- function()
           {
             pd <- position_dodge(0.9)
 
-            graphics::plot(ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,4], fill=vowelSub2()[,2])) +
-                           geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
-                           geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
-                           ggtitle(paste(input$title2,paste(input$replyPlot2, collapse = " "))) +
-                           xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
-                           scale_fill_hue(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
-                           facet_wrap(~vowelSub2()[,3]) +
-                           theme_bw() +
-                           theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
-                                 plot.title     =element_text(face="bold", hjust = 0.5),
-                                 legend.key.size=unit(1.5, 'lines'),
-                                 aspect.ratio   =0.67))
+            gp <- ggplot(data=vowelSub2(), aes(x=vowelSub2()[,1], y=vowelSub2()[,4], fill=vowelSub2()[,2])) +
+                  geom_bar(position=position_dodge(), stat="identity", colour="black", size=.3) +
+                  geom_errorbar(aes(ymin=ll, ymax=ul), width=w, position=pd) +
+                  ggtitle(input$title2) +
+                  xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
+                  scale_fill_hue(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
+                  facet_wrap(~vowelSub2()[,3]) +
+                  theme_bw() +
+                  theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        plot.title     =element_text(face="bold", hjust = 0.5),
+                        legend.key.size=unit(1.5, 'lines'),
+                        aspect.ratio   =0.67)
           }
+          else {}
+
+          if (input$replyXaxis2==input$replyLine2)
+            gp <- gp + theme(axis.title.x=element_blank(),
+                             axis.text.x =element_blank(),
+                             axis.ticks.x=element_blank())
           else {}
         }
         else {}
+
+        return(graphics::plot(gp))
       }
 
       res2 <- function()
@@ -5219,45 +5888,16 @@ visvow <- function()
 
       replyTimes30  <- reactive(input$replyTimes3)
       replyTimes3   <- debounce(replyTimes30 , 2000)
-  
+
       replyTimesN30 <- reactive(input$replyTimesN3)
       replyTimesN3  <- debounce(replyTimesN30, 2000)
-  
+
       selFormant30  <- reactive(input$selFormant3)
       selFormant3   <- debounce(selFormant30 , 2000)
 
-      vowelExcl3 <- reactive(
-      {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
-          return(NULL)
-
-        vowels   <- unique(vowelTab()$vowel)
-        vowels0  <- unique(vowelTab()$vowel)
-        speakers <- unique(vowelTab()$speaker)
-
-        for (i in 1:length(speakers))
-        {
-          vTsub  <- subset(vowelTab(), speaker==speakers[i])
-          vowels <- intersect(vowels,unique(vTsub$vowel))
-        }
-
-        return(setdiff(vowels0,vowels))
-      })
-
-      vowelSame3 <- reactive(
-      {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
-          return(NULL)
-
-        if (length(vowelExcl3())==0)
-          return(vowelTab())
-        else
-          return(subset(vowelTab(), !is.element(vowelTab()$vowel,vowelExcl3())))
-      })
-
       vowelScale3 <- reactive(
       {
-        return(vowelScale(vowelSame3(),input$replyScale3,0))
+        return(vowelScale(vowelSame(),input$replyScale3,0))
       })
 
       vowelNorm3 <- reactive(
@@ -5269,10 +5909,10 @@ visvow <- function()
         nColumns   <- ncol(vowelScale3())
         nPoints    <- (nColumns - (indexVowel + 1))/5
 
-        if (nPoints==max(as.numeric(replyTimesN3())))
+        if (!is.null(replyTimesN3()))
           replyTimesN <- replyTimesN3()
         else
-          replyTimesN <- as.character(Round(nPoints/2))
+          return(NULL)
 
         vL1 <- vowelLong1(vowelScale3(),replyTimesN)
         vL2 <- vowelLong2(vL1)
@@ -5695,18 +6335,7 @@ visvow <- function()
 
       output$selScale3 <- renderUI(
       {
-        options <- c("Hz",
-                     "bark: Schroeder et al. (1979)",
-                     "bark: Zwicker & Terhardt (1980)",
-                     "bark: Traunm\u00FCller (1990)",
-                     "ERB: Greenwood (1961)",
-                     "ERB: Moore & Glasberg (1983)",
-                     "ERB: Glasberg & Moore (1990)",
-                     "ln",
-                     "mel: Fant (1968)",
-                     "mel: O'Shaughnessy (1987)")
-
-        selectInput('replyScale3', 'Scale:', options, selected = options[1], selectize=FALSE, multiple=FALSE, width="100%")
+        selectInput('replyScale3', 'Scale:', optionsScale()[1:(length(optionsScale())-1)], selected = optionsScale()[1], selectize=FALSE, multiple=FALSE, width="100%")
       })
 
       output$selNormal3 <- renderUI(
@@ -5714,82 +6343,7 @@ visvow <- function()
         if (is.null(vowelTab()) || length(input$replyScale3)==0)
           return(NULL)
 
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-
-        ###
-
-        options1 <- c()
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (!is.element("F3",selFormant3())))
-          options1 <- c(options1, "Peterson (1951)" = " Peterson")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale3=="Hz"))
-          options1 <- c(options1, "Sussman (1986)" = " Sussman")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (!is.element("F3",selFormant3())))
-          options1 <- c(options1, "Syrdal & Gopal (1986)" = " Syrdal & Gopal")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (input$replyScale3=="Hz"))
-          options1 <- c(options1, "Miller (1989)" = " Miller")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (!is.element("F3",selFormant3())))
-          options1 <- c(options1, "Thomas & Kendall (2007)" = " Thomas & Kendall")
-
-        ###
-
-        options2 <- c()
-
-          options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
-
-        ###
-
-        options3 <- c()
-
-          options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
-
-        if (!is.element("F3",selFormant3()))
-          options3 <- c(options3, "Watt & Fabricius (2002)" = " Watt & Fabricius")
-
-        if (!is.element("F3",selFormant3()))
-          options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
-
-        if (!is.element("F3",selFormant3()))
-          options3 <- c(options3, "Heeringa & Van de Velde (2018)" = " Heeringa & Van de Velde")
-
-        ###
-
-        options4 <- c()
-
-        if  (input$replyScale3=="Hz")
-          options4 <- c(options4, "Nearey (1978) I" = " Nearey I")
-
-        if ((sum(vowelTab()[,indexVowel+3]==0)!=nrow(vowelTab())) &
-            (sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale3=="Hz"))
-          options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
-
-        if ((!is.element("F3",selFormant3())) &
-            (input$replyScale3=="Hz"))
-          options4 <- c(options4, "Labov (2006) I" = " Labov I")
-
-        if ((sum(vowelTab()[,indexVowel+6]==0)!=nrow(vowelTab())) &
-            (input$replyScale3=="Hz"))
-          options4 <- c(options4, "Labov (2006) II" = " Labov II")
-
-        ###
-
-        options <- c("None" = "", list(" Formant-ratio normalization"=options1,
-                                       " Range normalization"        =options2,
-                                       " Centroid normalization"     =options3,
-                                       " Log-mean normalization"     =options4))
-
-        selectInput('replyNormal3', 'Normalization:', options, selected = options[1], selectize=FALSE, multiple=FALSE)
+        selectInput('replyNormal3', 'Normalization:', optionsNormal(vowelTab(), input$replyScale3, onlyF1F2()), selected = optionsNormal(vowelTab(), input$replyScale3, onlyF1F2())[1], selectize=FALSE, multiple=FALSE)
       })
 
       output$selTimesN3 <- renderUI(
@@ -5814,10 +6368,10 @@ visvow <- function()
 
       output$selVowel3 <- renderUI(
       {
-        if (is.null(vowelSame3()))
+        if (is.null(vowelSame()))
           return(NULL)
 
-        options <- unique(vowelSame3()$vowel)
+        options <- unique(vowelSame()$vowel)
         selectInput('replyVowel3', 'Sel. vowels:', options, multiple=TRUE, selectize = FALSE, size=4, width="100%")
       })
 
@@ -5837,12 +6391,12 @@ visvow <- function()
         if (is.null(vowelTab()) || (nrow(vowelTab())==0))
           return(NULL)
 
-        if ((length(input$replyVowel3)==0) && (length(vowelExcl3())>0))
+        if ((length(input$replyVowel3)==0) && (length(vowelExcl())>0))
         {
           vowels <- ""
 
-          for (i in 1:length(vowelExcl3()))
-            vowels <- paste(vowels, vowelExcl3()[i])
+          for (i in 1:length(vowelExcl()))
+            vowels <- paste(vowels, vowelExcl()[i])
 
           return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br><br>"))))
         }
