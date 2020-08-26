@@ -669,7 +669,7 @@ optionsScale <- function()
   options <- c("Hz" = " Hz",
                "bark: Schroeder et al. (1979)" = " bark I",
                "bark: Zwicker & Terhardt (1980)" = " bark II",
-               "bark: Traunm\u00FCller (1990)" = " bark III",
+               "bark: Traunmueller (1990)" = " bark III",
                "ERB: Greenwood (1961)" = " ERB I",
                "ERB: Moore & Glasberg (1983)" = " ERB II",
                "ERB: Glasberg & Moore (1990)" = " ERB III",
@@ -847,10 +847,10 @@ visvow <- function()
       tags$style(type = 'text/css', '.navbar-default > .container-fluid { margin-left: -11px; }'),
       tags$style(type = 'text/css', 'nav.navbar-default { margin-left: 15px; margin-right: 15px; }'),
 
-      tags$style(type = 'text/css', 'p { margin-top: 0.0em; margin-bottom: 0.0em; }'),
+      tags$style(type = 'text/css', 'p { margin-top: 0; margin-bottom: 0; }'),
       tags$style(type = 'text/css', 'h5 { margin-top: 0.3em; margin-bottom: 0.1em; }'),
       tags$style(type = 'text/css', 'h6 { margin-top: 1.0em; margin-bottom: 0.1em; }'),
-      tags$style(type = 'text/css', 'li { margin-top: 0.0em; margin-bottom: 0.4em; }'),
+      tags$style(type = 'text/css', 'li { margin-top: 0; margin-bottom: 0.4em; }'),
 
       tags$style(type = 'text/css', '.shiny-progress-container { position: absolute; left: 49% !important; width: 200px; margin-left: 100px; top: 40% !important; height: 100px; margin-top: 50px; z-index: 2000; }'),
       tags$style(type = 'text/css', '.shiny-progress .progress {position: absolute; left: 50% !important; width: 487px; margin-left: -419px; top: 50% !important; height: 16px; margin-top: 8px; }'),
@@ -881,7 +881,7 @@ visvow <- function()
 
           fluidPage
           (
-            style = "border: 1px solid silver; padding: 6px;",
+            style = "border: 1px solid silver; padding: 6px; min-height: 690px;",
 
             fluidPage
             (
@@ -975,7 +975,7 @@ visvow <- function()
 
           splitLayout
           (
-            style = "border: 1px solid silver; padding-right: 20px; min-height: 690px;",
+            style = "border: 1px solid silver; min-height: 690px;",
             cellWidths = c("32%", "68%"),
             cellArgs = list(style = "padding: 6px"),
 
@@ -1000,9 +1000,10 @@ visvow <- function()
               ),
 
               uiOutput('selF35'),
-
               uiOutput('exclVow5'),
+
               br(),
+
               div(style="text-align: center;", actionButton('getEval', 'Go!'))
             ),
 
@@ -1015,14 +1016,15 @@ visvow <- function()
 
               splitLayout
               (
-                radioButtons(inputId  = 'selAuth5',
-                             label    = 'Choose author:',
-                             choices  = c("Flynn & Foulkes (2011)",
-                                          "Van der Harst (2011)"),
-                             selected =   "Van der Harst (2011)",
+                radioButtons(inputId  = 'selMeth5',
+                             label    = 'Choose:',
+                             choices  = c("Evaluate",
+                                          "Compare"),
+                             selected =   "Evaluate",
                              inline   = FALSE),
 
-                uiOutput("selEval5")
+                uiOutput("getOpts5"),
+                uiOutput("getEval5")
               )
             )
           )
@@ -1409,7 +1411,11 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>base</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shiny</span>"),p("Winston Chang, Joe Cheng, J.J. Allaire, Yihui Xie and Jonathan McPherson (2017). shiny: Web Application Framework for R. R package version 1.0.0. https://CRAN.R-project.org/package=shiny"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shinyBS</span>"),p("Eric Bailey (2015). shinyBS: Twitter Bootstrap Components for Shiny. R package version 0.61. https://CRAN.R-project.org/package=shinyBS"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>splitstackshape</span>"),p("Ananda Mahto (2019). splitstackshape: Stack and Reshape Datasets After Splitting Concatenated Values. R package version 1.4.8. https://CRAN.R-project.org/package=splitstackshape"))),
               tags$li(tags$span(HTML("<span style='color:blue'>stats</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>tydr</span>"),p("Hadley Wickham and Lionel Henry (2019). tidyr: Tidy Messy Data. R package version 1.0.0. https://CRAN.R-project.org/package=tidyr"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>PBSmapping</span>"),p("Jon T. Schnute, Nicholas Boers and Rowan Haigh (2019). PBSmapping: Mapping Fisheries Data and Spatial Analysis Tools. R package version 2.72.1. https://CRAN.R-project.org/package=PBSmapping"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>formattable</span>"),p("Kun Ren and Kenton Russell (2016). formattable: Create 'Formattable' Data Structures. R package version 0.2.0.1. https://CRAN.R-project.org/package=formattable"))),
               tags$li(tags$span(HTML("<span style='color:blue'>ggplot2</span>"),p("H. Wickham (2009). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York. http://ggplot2.org"))),
               tags$li(tags$span(HTML("<span style='color:blue'>plot3D</span>"),p("Karline Soetaert (2017). plot3D: Plotting Multi-Dimensional Data. R package version 1.1.1. https://CRAN.R-project.org/package=plot3D"))),
               tags$li(tags$span(HTML("<span style='color:blue'>MASS</span>"),p("W.N. Venables & B.D. Ripley (2002). Modern Applied Statistics with S. Fourth Edition. Springer, New York. ISBN 0-387-95457-0"))),
@@ -1446,7 +1452,7 @@ visvow <- function()
 
           fluidPage
           (
-            style = "border: 1px solid silver;",
+            style = "border: 1px solid silver; min-height: 690px;",
 
             br(),
             h5(strong("Liability")),
@@ -2459,7 +2465,7 @@ visvow <- function()
 
       output$selFont0b <- renderUI(
       {
-        options <- c("Courier","Helvetica","Times")
+        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont0b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -2601,19 +2607,21 @@ visvow <- function()
 
                        <br><br>
 
-                       In case multiple vowels of the same vowel category are pronounced by the same speaker, their formant frequencies are averaged.
-                       If a variable is included in the normalization process that represents different conditions under which these vowels were pronounced, they are averaged per condition.
+                       <span style='font-weight: bold;'>Evaluate</span><br>
+
+                       In case multiple vowels of the same vowel category are pronounced by the same speaker, their formant frequencies are averaged, and evaluation is carried out on the basis of these averages.
+                       When one or more variables are entered under 'Anatomic var(s)' and/or 'Socioling. var(s)', vowels are averaged per (combination of) condition.
 
                        <br><br>
 
-                       The evaluation methods of Flynn & Foulkes (2011) and Van der Harst (2011) are available.
+                       After selecting 'Evaluate' the evaluation methods of Flynn & Foulkes (2011) and Van der Harst (2011) become available.
                        When using the methods of Flynn, we do not not assume the vowel space to be a quadrilateral, but we calculate the convex hull which allows us to use the procedure for vowel spaces of any shape.
 
                        <br><br>
 
                        The results are presented as a table where the columns represent the scale conversion methods and the rows the normalization procedures.
-                       Each score is shown on a background with a color somewhere in between white and orange.
-                       The more orange the background is, the better the result.
+                       Each score is shown on a background with a color somewhere in between turquoise and yellow.
+                       The more yellow the background is, the better the result.
                        Note that for some tests larger scores represent better results, and for other tests smaller scores represent better results.
 
                        <br><br>
@@ -2632,9 +2640,15 @@ visvow <- function()
 
                        <br><br>
 
-                       References:
+                       <span style='font-weight: bold;'>Compare</span><br>
+
+                       After selecting 'Compare' one can choose from comparing scale conversion methods and speaker normalization methods.
+                       When comparing the scale conversion methods, the unnormalized formant measurements are used.
+                       When comparing the speaker normalization methods, the raw Hz formant measurements are used.
 
                        <br><br>
+
+                       <span style='font-weight: bold;'>References</span><br>
 
                        Flynn, N. (2011), Comparing Vowel Formant Normalisation Procedures. In: <i>York Papers in Linguistics Series 2</i>, pp. 1-28.
                        <br>
@@ -2741,22 +2755,49 @@ visvow <- function()
           return(NULL)
       })
 
-      output$selEval5 <- renderUI(
+      output$getOpts5 <- renderUI(
       {
-        if (input$selAuth5=="Flynn & Foulkes (2011)")
+        req(input$selMeth5)
+
+        if (input$selMeth5=="Evaluate")
+        {
+          return(radioButtons(inputId  = 'selAuth5',
+                              label    = 'Author:',
+                              choices  = c("Flynn & Foulkes (2011)",
+                                           "Van der Harst (2011)"),
+                              selected =   "Flynn & Foulkes (2011)",
+                              inline   = FALSE))
+        }
+
+        if (input$selMeth5=="Compare")
+        {
+          return(radioButtons(inputId  = 'selConv5',
+                              label    = 'Conversion:',
+                              choices  = c("Scaling",
+                                           "Normalization"),
+                              selected =   "Scaling",
+                              inline   = FALSE))
+        }
+      })
+
+      output$getEval5 <- renderUI(
+      {
+        req(input$selAuth5)
+
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Flynn & Foulkes (2011)"))
         {
           return(radioButtons(inputId  = 'selEval51',
-                              label    = 'Show results of method:',
+                              label    = 'Method:',
                               choices  = c("minimize variance of vowel spaces",
                                            "maximize overlap of vowel spaces"),
                               selected =   "minimize variance of vowel spaces",
                               inline   = FALSE))
         }
 
-        if (input$selAuth5=="Van der Harst (2011)")
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Van der Harst (2011)"))
         {
           return(radioButtons(inputId  = 'selEval52',
-                              label    = 'Show results of method:',
+                              label    = 'Method:',
                               choices  = c("preserve phonemic variation",
                                            "minimize anatomic variation",
                                            "preserve sociolinguistic variation"),
@@ -3066,7 +3107,109 @@ visvow <- function()
         return(list(matrix1, matrix2, matrix3, matrix4, matrix5))
       })
 
-      output$graph5 <- renderFormattable(
+      showResults1 <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
+
+        matrix6  <- matrix(NA, nrow = (length(Scale)-1), ncol = (length(Scale)-1))
+
+        rownames(matrix6) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix6) <- Scale[1:(length(Scale)-1)]
+
+         loop <- 0
+        nLoop <- ((length(Scale)-1) * ((length(Scale)-1)-1))/2
+
+        global$replyNormal5 <- ""
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 2:(length(Scale)-1))
+          {
+            global$replyScale5  <- Scale[i]
+            vT1 <- vowelSubS5()
+
+            for (j in 1:(i-1))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              global$replyScale5  <- Scale[j]
+              vT2 <- vowelSubS5()
+
+              if (emptyF3() || !input$replyF35)
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+              else
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+
+              matrix6[i,j] <- Cor
+              matrix6[j,i] <- Cor
+            }
+          }
+        })
+
+        for (i in 1:(length(Scale)-1))
+        {
+          matrix6[i,i] <- 0
+        }
+
+        return(matrix6)
+      })
+
+      showResults2 <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
+
+        matrix6  <- matrix(NA, nrow = length(Normal), ncol = length(Normal))
+
+        rownames(matrix6) <- c(" None", Normal[2:length(Normal)])
+        colnames(matrix6) <- c(" None", Normal[2:length(Normal)])
+
+        global$replyScale5 <- " Hz"
+
+         loop <- 0
+        nLoop <- (length(Normal) * (length(Normal)-1))/2
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 2:length(Normal))
+          {
+            global$replyNormal5 <- Normal[i]
+            vT1 <- vowelSubS5()
+
+            for (j in 1:(i-1))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              global$replyNormal5 <- Normal[j]
+              vT2 <- vowelSubS5()
+
+              if (emptyF3() || !input$replyF35)
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+              else
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+
+              matrix6[i,j] <- Cor
+              matrix6[j,i] <- Cor
+            }
+          }
+        })
+
+        for (i in 1:length(Normal))
+        {
+          matrix6[i,i] <- 0
+        }
+
+        return(matrix6)
+      })
+
+      output$table5 <- renderFormattable(
       {
         if (input$selAuth5=="Flynn & Foulkes (2011)")
           req(input$selEval51)
@@ -3074,60 +3217,100 @@ visvow <- function()
         if (input$selAuth5=="Van der Harst (2011)")
           req(input$selEval52)
 
+        df <- data.frame()
+
         if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "minimize variance of vowel spaces"))
         {
           df <- evalResults()[[1]]
-          col1 <- "orange"
-          col2 <- "white"
+          col1 <- "yellow"
+          col2 <- "turquoise"
         }
 
         if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "maximize overlap of vowel spaces"))
         {
           df <- evalResults()[[2]]
-          col1 <- "white"
-          col2 <- "orange"
+          col1 <- "turquoise"
+          col2 <- "yellow"
         }
 
         if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve phonemic variation"))
         {
           df <- evalResults()[[3]]
-          col1 <- "white"
-          col2 <- "orange"
+          col1 <- "turquoise"
+          col2 <- "yellow"
         }
 
         if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "minimize anatomic variation"))
         {
           df <- evalResults()[[4]]
-          col1 <- "orange"
-          col2 <- "white"
+          col1 <- "yellow"
+          col2 <- "turquoise"
         }
 
         if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve sociolinguistic variation"))
         {
           df <- evalResults()[[5]]
-          col1 <- "white"
-          col2 <- "orange"
+          col1 <- "turquoise"
+          col2 <- "yellow"
         }
 
         formattable(df, align = rep("l", 11),
-                        list(' '         = formatter("span", style = ~ style(display = "block", "font.weight" = "bold")),
-                             ' Hz'       = color_tile(col1, col2),
-                             ' bark I'   = color_tile(col1, col2),
-                             ' bark II'  = color_tile(col1, col2),
-                             ' bark III' = color_tile(col1, col2),
-                             ' ERB I'    = color_tile(col1, col2),
-                             ' ERB II'   = color_tile(col1, col2),
-                             ' ERB III'  = color_tile(col1, col2),
-                             ' ln'       = color_tile(col1, col2),
-                             ' mel I'    = color_tile(col1, col2),
-                             ' mel II'   = color_tile(col1, col2)
+                    list(' ' = formatter("span", style = ~ style(display = "block", "font.weight" = "bold")),
+                         formattable::area() ~ color_tile(col1, col2)
                         )
                    )
       })
 
+      output$graph5 <- renderPlot(
+      {
+        req(input$selConv5)
+
+        if (input$selConv5=="Scaling")
+          clus <- hclust(as.dist(showResults1()), method="average")
+
+        if (input$selConv5=="Normalization")
+          clus <- hclust(as.dist(showResults2()), method="average")
+
+        dendro <- dendro_data(as.dendrogram(clus), type = "rectangle")
+        dendro$labels$label <- paste0("  ", dendro$labels$label)
+
+        rownames(dendro$labels) <- 1:nrow(dendro$labels)
+
+        gp <- ggplot(dendro$segments) +
+              geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) +
+              geom_text (data = dendro$labels, aes(x, y, label = label), hjust = 0, angle = 0, size = 4, family="Futura-Medium") +
+              scale_y_reverse(expand = c(0.5, 0)) +
+              coord_flip() +
+              ggtitle('') +
+              xlab('') + ylab('') +
+              theme_bw() +
+              theme(text            =element_text(size=22, family="Futura-Medium"),
+                    plot.title      =element_text(face="bold", hjust = 0.5),
+                    axis.text       =element_blank(),
+                    axis.ticks      =element_blank()) +
+#                   panel.grid.major=element_blank(),
+#                   panel.grid.minor=element_blank()) +
+             guides(color = guide_legend(override.aes = list(linetype = 0, shape=3)))
+
+        print(gp)
+      })
+
       output$Graph5 <- renderUI(
       {
-        formattableOutput("graph5", height="500px")
+        if (input$selMeth5=="Evaluate")
+        {
+          fluidPage(
+            style = "padding:0; margin:0; font-size: 90%",
+            formattableOutput("table5", height="513px")
+          )
+        }
+        else
+        {
+          fluidPage(
+            style = "padding:0; margin:0;",
+            plotOutput("graph5", height="513px")
+          )
+        }
       })
 
       ##########################################################################
@@ -3508,7 +3691,7 @@ visvow <- function()
         {
           indexVowel <- grep("^vowel$", colnames(vowelTab()))
 
-          if (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)
+          if (input$geon2 | input$geon3 | input$geon4 | input$geon5)
             options <- c()
           else
             options <- c(colnames(vowelTab()[1:(indexVowel-1)]))
@@ -3531,7 +3714,7 @@ visvow <- function()
 
         if ((length(input$replyShape1)>0) && (length(replyTimes1())==1) && (input$axisZ=="--"))
         {
-          if (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)
+          if (input$geon2 | input$geon3 | input$geon4 | input$geon5)
             options <- NULL
           else
             options <- unique(fuseCols(vowelTab(),input$replyShape1))
@@ -3730,26 +3913,57 @@ visvow <- function()
         if (is.null(vowelSub1()) || (nrow(vowelSub1())==0) | (length(replyTimes1())==0))
           return(NULL)
 
-        if ((length(replyTimes1())==1) && (!(input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5)) && (input$axisZ=="--"))
+        if ((length(replyTimes1())==1) && (!(input$geon2 | input$geon3 | input$geon4 | input$geon5)) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()
 
           if ((numColor()>0) & (numShape()>0) & (numShape()<=11))
+          {
             Basis <- ggplot(data=vT, aes(x=X, y=Y, color=color, shape=shape)) +
-              geom_point(size=2.5) +
               scale_shape_manual(values=shpPalette())
+            
+            if (input$geon1)
+              Basis <- Basis + geom_point(size=2.5) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
+            else        
+              Basis <- Basis + geom_point(size=2.5)
+          }
           else
+            
           if  (numColor()>0)
-            Basis <- ggplot(data=vT, aes(x=X, y=Y, color=color)) +
-              geom_point(size=2.5)
+          {
+            Basis <- ggplot(data=vT, aes(x=X, y=Y, color=color))
+            
+            if (input$geon1)
+              Basis <- Basis + geom_text(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
+            else        
+              Basis <- Basis + geom_point(size=2.5)
+          }
           else
+            
           if ((numShape()>0) & (numShape()<=11))
+          {
             Basis <- ggplot(data=vT, aes(x=X, y=Y, shape=shape)) +
-              geom_point(size=2.5, colour=colPalette1(1)) +
               scale_shape_manual(values=shpPalette())
+  
+          if (input$geon1)
+              Basis <- Basis + geom_point(size=2.5, colour=colPalette1(1)) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
+            else        
+              Basis <- Basis + geom_point(size=2.5, colour=colPalette1(1))
+          }
           else
-            Basis <- ggplot(data=vT, aes(x=X, y=Y, color=color)) +
-              geom_point(size=2.5)
+          {
+            Basis <- ggplot(data=vT, aes(x=X, y=Y, color=color))
+            
+            if (input$geon1)
+              Basis <- Basis + geom_text(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
+            else        
+              Basis <- Basis + geom_point(size=2.5)
+          }
+  
+          if (!input$geon1)
+              Basis <- Basis + labs(colour=paste(input$replyColor1, collapse = " "), shape=paste(input$replyShape1, collapse = " "))
+            else
+              Basis <- Basis + guides(colour=FALSE) + labs(shape=paste(input$replyShape1, collapse = " "))    
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
           {
@@ -3786,7 +4000,6 @@ visvow <- function()
 
           graphics::plot(Basis + scaleX + scaleY + Title + Facet +
                          scale_color_manual(values=colPalette1(length(unique(vT$color)))) +
-                         labs(colour=paste(input$replyColor1, collapse = " "),shape=paste(input$replyShape1, collapse = " ")) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint1b), family=input$replyFont1b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -3796,7 +4009,7 @@ visvow <- function()
         }
         else
 
-        if ((length(replyTimes1())==1) && (input$geon1 | input$geon2 | input$geon3 | input$geon4 | input$geon5) && (input$axisZ=="--"))
+        if ((length(replyTimes1())==1) && (input$geon2 | input$geon3 | input$geon4 | input$geon5) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()
 
@@ -3809,16 +4022,9 @@ visvow <- function()
           Fill  <- geom_blank()
 
           if (input$geon1)
-          {
-            if (!(input$geon2 | input$geon3 | input$geon4 | input$geon5))
-              Points <- geom_text(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
-            else
-              Points <- geom_text(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=0.3)
-          }
+            Points <- geom_text(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=0.3)
           else
-          {
             Points <- geom_blank()
-          }
 
           if (input$geon2)
           {
@@ -4401,7 +4607,7 @@ visvow <- function()
 
       output$selFont1b <- renderUI(
       {
-        options <- c("Courier","Helvetica","Times")
+        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont1b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -5177,7 +5383,7 @@ visvow <- function()
 
       output$selFont4b <- renderUI(
       {
-        options <- c("Courier","Helvetica","Times")
+        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont4b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -5825,7 +6031,7 @@ visvow <- function()
 
       output$selFont2b <- renderUI(
       {
-        options <- c("Courier","Helvetica","Times")
+        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont2b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -6714,7 +6920,7 @@ visvow <- function()
 
       output$selFont3b <- renderUI(
       {
-        options <- c("Courier","Helvetica","Times")
+        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont3b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 

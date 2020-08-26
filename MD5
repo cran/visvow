@@ -1,8 +1,8 @@
-4f25f0de1350aabc417656a5638dbc7c *DESCRIPTION
+28d71028adc9c366cb962c1c0e72102f *DESCRIPTION
 4f4f8491d6da7ce8e21c8a90f6ecf38a *NAMESPACE
-71df988507d186e3c33ee4f00e2b486f *R/visvow.R
-582cb995b3926892acfd126b1888d91a *build/partial.rdb
-5c81a067f34881a32d02a0247a511588 *build/vignette.rds
+9a084ff17813054683e3819f0db0a640 *R/visvow.R
+c760f46c01b371a1eabf34d8f9d04fce *build/partial.rdb
+bc55058c09382bdac4e58189e2fe9a26 *build/vignette.rds
 6e8ac29945864c583055337b6ddb808f *inst/CITATION
 bf0dd08212aa82a63cd21424000ca18e *inst/FA1.jpg
 13a8892dc98afb451a59780a59dacf21 *inst/FA2.png
