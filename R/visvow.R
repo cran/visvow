@@ -939,7 +939,7 @@ visvow <- function()
                 uiOutput('catPlot0')
               ),
 
-              checkboxGroupInput("selGeon0", "Options:", c("average","points","smooth"), selected="points", inline=TRUE)
+              checkboxGroupInput("selGeon0", "Options:", c("average", "points", "smooth"), selected="points", inline=TRUE)
             ),
 
             column
@@ -1183,7 +1183,7 @@ visvow <- function()
                 uiOutput('catPlot4')
               ),
 
-              checkboxGroupInput("selGeon4", "Options:", c("average"), inline=TRUE)
+              checkboxGroupInput("selGeon4", "Options:", c("average", "rotate x-axis labels"), inline=TRUE)
             ),
 
             column
@@ -1253,7 +1253,7 @@ visvow <- function()
                 uiOutput('catPlot2')
               ),
 
-              checkboxGroupInput("selGeon2", "Options:", c("average"), inline=TRUE)
+              checkboxGroupInput("selGeon2", "Options:", c("average", "rotate x-axis labels"), inline=TRUE)
             ),
 
             column
@@ -1435,7 +1435,7 @@ visvow <- function()
             )),
 
             br(),
-            p("Visible Vowels allows to convert and normalize vowel data and calculate some specific metrics. The document ", a("here", href = "www/visvow.pdf", target = "_blank"), "explains how these values are calculated."),
+            p("Visible Vowels allows to convert and normalize vowel data and calculate some specific metrics. To get all the details on how these values are calculated, type ", span(style="font-family: monospace; font-size: 100%;", 'vignette("visvow")'), " in the R terminal."),
             br(),
             h5(strong("How to cite this app")),
             p("Heeringa, W. & Van de Velde, H. (2018). \u201CVisible Vowels: a Tool for the Visualization of Vowel Variation.\u201D In ",tags$i("Proceedings CLARIN Annual Conference 2018, 8 - 10 October, Pisa, Italy."),"CLARIN ERIC."),
@@ -2465,7 +2465,7 @@ visvow <- function()
 
       output$selFont0b <- renderUI(
       {
-        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
+        options <- c("Courier" = "Courier", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont0b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -2486,100 +2486,33 @@ visvow <- function()
         return(paste0("contoursPlot.",input$replyFormat0b))
       }
 
-      px2inch <- function(x)
-      {
-        return(x*0.010416666666819)
-      }
-
-      # Function ggSave developed by Z.Lin, zie: https://stackoverflow.com/questions/45731238/autocrop-faceted-plots-made-by-ggplot
-
-      sumUnitNull <- function(x)
-      {
-        res <- 0
-        for (i in 1:length(x))
-        {
-          if (!is.null(attr(x[i], "unit")))
-            check.unit <- attr(x[i], "unit")
-          else
-
-            if (!is.null(attr(x[i][[1]], "unit")))
-              check.unit <- attr(x[i][[1]], "unit")
-            else
-              check.unit <- NA
-
-            if(!is.na(check.unit) && check.unit == "null")
-              res <- res + as.numeric(x[i])
-        }
-        return(res)
-      }
-
-      ggSave <- function(filename, plot = last_plot(), device = NULL, path = NULL, scale = 1, max.dimension = 10, units = c("in", "cm", "mm"), dpi=300, limitsize = TRUE)
-      {
-        # get width/height information from the plot object (likely in a mixture of different units)
-        w <- ggplotGrob(plot)$widths
-        h <- ggplotGrob(plot)$heights
-
-        # define maximum dimensions
-        w.max <- as.numeric(convertUnit(unit(max.dimension, units),"in"))
-        h.max <- as.numeric(convertUnit(unit(max.dimension, units),"in"))
-
-        # sum the inflexible size components of the plot object's width/height, these components have unit = "in", "mm", "pt", "grobheight", etc
-        w.in <- sum(as.numeric(convertUnit(w,"in")))
-        h.in <- sum(as.numeric(convertUnit(h,"in")))
-
-        # obtain the amount of space available for the flexible size components
-        w.avail <- w.max - w.in
-        h.avail <- h.max - h.in
-
-        # sum the flexible sized components of the plot object's width/height, these components have unit = "null"
-        w.f <- sumUnitNull(w)
-        h.f <- sumUnitNull(h)
-
-        # shrink the amount of avilable space based on what the flexible components would actually take up
-        if (w.f/h.f > w.avail/h.avail)
-          h.avail <- w.avail/w.f*h.f
-        else
-          w.avail <- h.avail/h.f*w.f
-
-        w <- w.in + w.avail
-        h <- h.in + h.avail
-
-        ggsave(filename, plot = plot, device = device, path = path, scale = scale, width = w, height = h, units = units, dpi = dpi, limitsize = limitsize)
-      }
-
       output$download0b <- downloadHandler(filename = fileName0b, content = function(file)
       {
-        if (input$replySize0b=="small")
-          scale <- 2.8
-        if (input$replySize0b=="medium")
-          scale <- 1.4
-        if (input$replySize0b=="large")
-          scale <- 1.1
-
-         width0 <- px2inch(700)
-        height0 <- px2inch(550)
-
         grDevices::pdf(NULL)
 
+        scale  <- 72/res0()
+        width  <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE)
+        height <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE)
+        
         if ((length(input$catXaxis0)>0) && (nrow(vowelSub0())>0))
-          print(plotGraph0())
+          plot <- plotGraph0()
         else
-          print(ggplot()+theme_bw())
-
+          plot <- ggplot()+theme_bw()
+        
         if (input$replyFormat0b=="JPG")
-          ggSave(file, scale=scale, device="jpeg", max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
         if (input$replyFormat0b=="PNG")
-          ggSave(file, scale=scale, device="png" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="png" )
         else
         if (input$replyFormat0b=="SVG")
-          ggSave(file, scale=scale, device="svg" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="svg" )
         else
         if (input$replyFormat0b=="EPS")
-          ggSave(file, scale=scale, device=grDevices::cairo_ps , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_ps )
         else
         if (input$replyFormat0b=="PDF")
-          ggSave(file, scale=scale, device=grDevices::cairo_pdf, max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
         else {}
 
         grDevices::dev.off()
@@ -3278,18 +3211,18 @@ visvow <- function()
 
         gp <- ggplot(dendro$segments) +
               geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) +
-              geom_text (data = dendro$labels, aes(x, y, label = label), hjust = 0, angle = 0, size = 4, family="Futura-Medium") +
+              geom_text (data = dendro$labels, aes(x, y, label = label), hjust = 0, angle = 0, size = 4, family="Helvetica") +
               scale_y_reverse(expand = c(0.5, 0)) +
               coord_flip() +
               ggtitle('') +
-              xlab('') + ylab('') +
+              xlab(NULL) + ylab(NULL) +
               theme_bw() +
-              theme(text            =element_text(size=22, family="Futura-Medium"),
+              theme(text            =element_text(size=22, family="Helvetica"),
                     plot.title      =element_text(face="bold", hjust = 0.5),
                     axis.text       =element_blank(),
-                    axis.ticks      =element_blank()) +
-#                   panel.grid.major=element_blank(),
-#                   panel.grid.minor=element_blank()) +
+                    axis.ticks      =element_blank(),
+                    panel.grid.major=element_blank(),
+                    panel.grid.minor=element_blank()) +
              guides(color = guide_legend(override.aes = list(linetype = 0, shape=3)))
 
         print(gp)
@@ -4607,7 +4540,7 @@ visvow <- function()
 
       output$selFont1b <- renderUI(
       {
-        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
+        options <- c("Courier" = "Courier", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont1b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -4630,37 +4563,31 @@ visvow <- function()
 
       save2D <- function(file)
       {
-        if (input$replySize1b=="small")
-          scale <- 2.8
-        if (input$replySize1b=="medium")
-          scale <- 1.4
-        if (input$replySize1b=="large")
-          scale <- 1.1
-
-         width0 <- px2inch(700)
-        height0 <- px2inch(550)
-
         grDevices::pdf(NULL)
 
+        scale  <- 72/res1()
+        width  <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE)
+        height <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE)
+        
         if ((length(replyTimes1())>0) && (nrow(vowelSub1())>0))
-          print(plotGraph1())
+          plot <- plotGraph1()
         else
-          print(ggplot()+theme_bw())
-
+          plot <- ggplot()+theme_bw()
+        
         if (input$replyFormat1b=="JPG")
-          ggSave(file, scale=scale, device="jpeg", max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
         if (input$replyFormat1b=="PNG")
-          ggSave(file, scale=scale, device="png" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="png" )
         else
         if (input$replyFormat1b=="SVG")
-          ggSave(file, scale=scale, device="svg" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="svg" )
         else
         if (input$replyFormat1b=="EPS")
-          ggSave(file, scale=scale, device=grDevices::cairo_ps , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_ps )
         else
         if (input$replyFormat1b=="PDF")
-          ggSave(file, scale=scale, device=grDevices::cairo_pdf, max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
         else {}
 
         grDevices::dev.off()
@@ -4668,33 +4595,30 @@ visvow <- function()
 
       save3D <- function(file)
       {
-        if (input$replySize1b=="small")
-          scale <- 8
-        if (input$replySize1b=="medium")
-          scale <- 4
-        if (input$replySize1b=="large")
-          scale <- 3.4
+        grDevices::pdf(NULL)
 
-         width0 <- scale * 700
-        height0 <- scale * 550
+        scale0  <- 300/res1()
+        width0  <- 700 * scale0
+        height0 <- 550 * scale0
+        
+        scale   <-  72/res1()
+        width   <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE) * scale
+        height  <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE) * scale
 
-         width  <- px2inch( width0)
-        height  <- px2inch(height0)
-
-        if (input$replyFormat1b=="PNG")
-          grDevices::png (file, width = width0, height = height0, res=300)
-        else
         if (input$replyFormat1b=="JPG")
-          grDevices::jpeg(file, width = width0, height = height0, res=300)
+          grDevices::jpeg      (file, width = width0, height = height0, pointsize = 12, res = 300)
+        else
+        if (input$replyFormat1b=="PNG")
+          grDevices::png       (file, width = width0, height = height0, pointsize = 12, res = 300)
         else
         if (input$replyFormat1b=="SVG")
-          grDevices::svg       (file, width = width , height = height)
+          grDevices::svg       (file, width = width , height = height , pointsize = 12)
         else
         if (input$replyFormat1b=="EPS")
-          grDevices ::cairo_ps (file, width = width , height = height)
+          grDevices ::cairo_ps (file, width = width , height = height , pointsize = 12)
         else
         if (input$replyFormat1b=="PDF")
-          grDevices ::cairo_pdf(file, width = width , height = height)
+          grDevices ::cairo_pdf(file, width = width , height = height , pointsize = 12)
         else {}
 
         if ((length(replyTimes1())>0) && (nrow(vowelSub1())>0))
@@ -5144,6 +5068,11 @@ visvow <- function()
         if (input$selError4=="99%")
           w <- 0.4
 
+        if (is.element("rotate x-axis labels",input$selGeon4))
+          Angle = 90
+        else
+          Angle = 0
+
         if (((length(input$catLine4)==0) | (length(input$catLine4)>14)) && (length(input$catPlot4)==0))
         {
           if (input$replyGraph4=="Dot plot")
@@ -5155,6 +5084,7 @@ visvow <- function()
                   xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5169,6 +5099,7 @@ visvow <- function()
                   xlab(paste(input$replyXaxis4, collapse = " ")) + ylab(paste0(input$replyMethod4," ", paste(input$replyVar4,collapse = ' ')," (",scaleLab4(),")")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5187,6 +5118,7 @@ visvow <- function()
                   facet_wrap(~vowelSub4()[,2]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5203,6 +5135,7 @@ visvow <- function()
                   facet_wrap(~vowelSub4()[,2]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5224,6 +5157,7 @@ visvow <- function()
                   scale_colour_discrete(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'points'),
                         aspect.ratio   =0.67)
@@ -5242,6 +5176,7 @@ visvow <- function()
                   scale_fill_hue(name=paste0(paste(input$replyLine4, collapse = " "),"\n")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'lines'),
                         aspect.ratio   =0.67)
@@ -5271,6 +5206,7 @@ visvow <- function()
                   facet_wrap(~vowelSub4()[,3]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'points'),
                         aspect.ratio   =0.67)
@@ -5290,6 +5226,7 @@ visvow <- function()
                   facet_wrap(~vowelSub4()[,3]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint4b), family=input$replyFont4b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'lines'),
                         aspect.ratio   =0.67)
@@ -5383,7 +5320,7 @@ visvow <- function()
 
       output$selFont4b <- renderUI(
       {
-        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
+        options <- c("Courier" = "Courier", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont4b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -5406,37 +5343,31 @@ visvow <- function()
 
       output$download4b <- downloadHandler(filename = fileName4b, content = function(file)
       {
-        if (input$replySize4b=="small")
-          scale <- 2.8
-        if (input$replySize4b=="medium")
-          scale <- 1.4
-        if (input$replySize4b=="large")
-          scale <- 1.1
-
-         width0 <- px2inch(700)
-        height0 <- px2inch(550)
-
         grDevices::pdf(NULL)
 
+        scale  <- 72/res4()
+        width  <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE)
+        height <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE)
+        
         if ((length(input$replyVar4)>0) & (length(input$replyTimes4)>1) & (length(input$catXaxis4)>0) && (nrow(vowelSub4())>0))
-          print(plotGraph4())
+          plot <- plotGraph4()
         else
-          print(ggplot()+theme_bw())
-
+          plot <- ggplot()+theme_bw()
+        
         if (input$replyFormat4b=="JPG")
-          ggSave(file, scale=scale, device="jpeg", max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
         if (input$replyFormat4b=="PNG")
-          ggSave(file, scale=scale, device="png" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="png" )
         else
         if (input$replyFormat4b=="SVG")
-          ggSave(file, scale=scale, device="svg" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="svg" )
         else
         if (input$replyFormat4b=="EPS")
-          ggSave(file, scale=scale, device=grDevices::cairo_ps , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_ps )
         else
         if (input$replyFormat4b=="PDF")
-          ggSave(file, scale=scale, device=grDevices::cairo_pdf, max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
         else {}
 
         grDevices::dev.off()
@@ -5792,6 +5723,11 @@ visvow <- function()
         if (input$selError2=="99%")
           w <- 0.4
 
+        if (is.element("rotate x-axis labels",input$selGeon2))
+          Angle = 90
+        else
+          Angle = 0
+
         if (((length(input$catLine2)==0) | (length(input$catLine2)>14)) && (length(input$catPlot2)==0))
         {
           if (input$replyGraph2=="Dot plot")
@@ -5803,6 +5739,7 @@ visvow <- function()
                   xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5817,6 +5754,7 @@ visvow <- function()
                   xlab(paste(input$replyXaxis2, collapse = " ")) + ylab("duration") +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5835,6 +5773,7 @@ visvow <- function()
                   facet_wrap(~vowelSub2()[,2]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5851,6 +5790,7 @@ visvow <- function()
                   facet_wrap(~vowelSub2()[,2]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         aspect.ratio   =0.67)
           }
@@ -5872,6 +5812,7 @@ visvow <- function()
                   scale_colour_discrete(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'points'),
                         aspect.ratio   =0.67)
@@ -5890,6 +5831,7 @@ visvow <- function()
                   scale_fill_hue(name=paste0(paste(input$replyLine2, collapse = " "),"\n")) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'lines'),
                         aspect.ratio   =0.67)
@@ -5919,6 +5861,7 @@ visvow <- function()
                   facet_wrap(~vowelSub2()[,3]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'points'),
                         aspect.ratio   =0.67)
@@ -5938,6 +5881,7 @@ visvow <- function()
                   facet_wrap(~vowelSub2()[,3]) +
                   theme_bw() +
                   theme(text           =element_text(size=as.numeric(input$replyPoint2b), family=input$replyFont2b),
+                        axis.text.x    =element_text(angle=Angle),
                         plot.title     =element_text(face="bold", hjust = 0.5),
                         legend.key.size=unit(1.5, 'lines'),
                         aspect.ratio   =0.67)
@@ -6031,7 +5975,7 @@ visvow <- function()
 
       output$selFont2b <- renderUI(
       {
-        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
+        options <- c("Courier" = "Courier", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont2b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -6054,40 +5998,35 @@ visvow <- function()
 
       output$download2b <- downloadHandler(filename = fileName2b, content = function(file)
       {
-        if (input$replySize2b=="small")
-          scale <- 2.8
-        if (input$replySize2b=="medium")
-          scale <- 1.4
-        if (input$replySize2b=="large")
-          scale <- 1.1
-
-         width0 <- px2inch(700)
-        height0 <- px2inch(550)
-
         grDevices::pdf(NULL)
 
+        scale  <- 72/res2()
+        width  <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE)
+        height <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE)
+        
         if ((length(input$catXaxis2)>0) && (nrow(vowelSub2())>0))
-          print(plotGraph2())
+          plot <- plotGraph2()
         else
-          print(ggplot()+theme_bw())
-
+          plot <- ggplot()+theme_bw()
+        
         if (input$replyFormat2b=="JPG")
-          ggSave(file, scale=scale, device="jpeg", max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
         if (input$replyFormat2b=="PNG")
-          ggSave(file, scale=scale, device="png" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="png" )
         else
         if (input$replyFormat2b=="SVG")
-          ggSave(file, scale=scale, device="svg" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="svg" )
         else
         if (input$replyFormat2b=="EPS")
-          ggSave(file, scale=scale, device=grDevices::cairo_ps , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_ps )
         else
         if (input$replyFormat2b=="PDF")
-          ggSave(file, scale=scale, device=grDevices::cairo_pdf, max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
         else {}
 
         grDevices::dev.off()
+
       })
 
       ##########################################################################
@@ -6457,16 +6396,24 @@ visvow <- function()
 
       # Measure distances
 
-      vowelDist3 <- reactive(
+      vowelDiff3 <- reactive(
       {
         if (is.null(vowelCor3()) || (nrow(vowelCor3())==0))
           return(NULL)
 
         if (input$selMetric3=="Euclidean")
-          return(as.dist(  vowelCor3(), diag=FALSE, upper=FALSE))
+          return(  vowelCor3())
 
         if (input$selMetric3=="Accdist"  )
-          return(as.dist(1-vowelCor3(), diag=FALSE, upper=FALSE))
+          return(1-vowelCor3())
+      })
+
+      vowelDist3 <- reactive(
+      {
+        if (is.null(vowelDiff3()) || (nrow(vowelDiff3())==0))
+          return(NULL)
+        else
+          return(as.dist(vowelDiff3(), diag=FALSE, upper=FALSE))
       })
 
       clusObj <- reactive(
@@ -6678,6 +6625,8 @@ visvow <- function()
         if (length(speakers)>15) fs <- 5   else
         if (length(speakers)> 1) fs <- 6   else {}
 
+        fs <- min(fs, convertUnit(unit(as.numeric(input$replyPoint3b), "pt"), "mm", valueOnly=TRUE))
+
         dendro$labels$label <- paste0("  ",dendro$labels$label)
 
         if ((input$replyGrouping3=="speaker") || (length(unique(groupings))==1) || (input$summarize3))
@@ -6691,7 +6640,7 @@ visvow <- function()
               labs(colour=paste0(" ",paste(input$replyGrouping3, collapse = " "),"\n")) +
               coord_flip() +
               ggtitle(input$title3) +
-              xlab('') + ylab('') +
+              xlab(NULL) + ylab(NULL) +
               theme_bw() +
               theme(text            =element_text(size=as.numeric(input$replyPoint3b), family=input$replyFont3b),
                     plot.title      =element_text(face="bold", hjust = 0.5),
@@ -6740,6 +6689,8 @@ visvow <- function()
         if (length(speakers)>30) fs <- 4 else
         if (length(speakers)>10) fs <- 5 else
         if (length(speakers)> 1) fs <- 6 else {}
+
+        fs <- min(fs, convertUnit(unit(as.numeric(input$replyPoint3b), "pt"), "mm", valueOnly=TRUE))
 
         if ((input$replyGrouping3=="speaker") || (length(unique(groupings))==1) || (input$summarize3))
           gp <- ggplot(coords, aes(V1, V2, label = rownames(as.matrix(vowelDist3()))                 ))
@@ -6891,10 +6842,10 @@ visvow <- function()
 
       output$download3a <- downloadHandler(filename = fileName3a, content = function(file)
       {
-        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0)  && (!is.null(vowelCor3())))
+        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0)  && (!is.null(vowelDiff3())))
         {
-          vT <- data.frame(rownames(vowelCor3()),vowelCor3())
-          colnames(vT) <- c("element",colnames(vowelCor3()))
+          vT <- data.frame(rownames(vowelDiff3()), vowelDiff3())
+          colnames(vT) <- c("element", colnames(vowelDiff3()))
         }
         else
           vT <- data.frame()
@@ -6920,7 +6871,7 @@ visvow <- function()
 
       output$selFont3b <- renderUI(
       {
-        options <- c("Courier" = "Courier", "Futura" = "Futura-Medium", "Helvetica" = "Helvetica", "Times" = "Times")
+        options <- c("Courier" = "Courier", "Helvetica" = "Helvetica", "Times" = "Times")
         selectInput('replyFont3b', label=NULL, options, selected = "Helvetica", selectize=FALSE, multiple=FALSE)
       })
 
@@ -6943,37 +6894,31 @@ visvow <- function()
 
       output$download3b <- downloadHandler(filename = fileName3b, content = function(file)
       {
-        if (input$replySize3b=="small")
-          scale <- 2.8
-        if (input$replySize3b=="medium")
-          scale <- 1.4
-        if (input$replySize3b=="large")
-          scale <- 1.1
-
-         width0 <- px2inch(700)
-        height0 <- px2inch(550)
-
         grDevices::pdf(NULL)
 
-        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelCor3())))
-          print(plotGraph3())
+        scale  <- 72/res3()
+        width  <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE)
+        height <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE)
+        
+        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelDiff3())))
+          plot <- plotGraph3()
         else
-          print(ggplot()+theme_bw())
-
+          plot <- ggplot()+theme_bw()
+        
         if (input$replyFormat3b=="JPG")
-          ggSave(file, scale=scale, device="jpeg", max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
         if (input$replyFormat3b=="PNG")
-          ggSave(file, scale=scale, device="png" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="png" )
         else
         if (input$replyFormat3b=="SVG")
-          ggSave(file, scale=scale, device="svg" , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="svg" )
         else
         if (input$replyFormat3b=="EPS")
-          ggSave(file, scale=scale, device=grDevices::cairo_ps , max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_ps )
         else
         if (input$replyFormat3b=="PDF")
-          ggSave(file, scale=scale, device=grDevices::cairo_pdf, max.dimension = height0)
+          ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
         else {}
 
         grDevices::dev.off()
