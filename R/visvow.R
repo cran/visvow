@@ -1004,7 +1004,7 @@ visvow <- function()
 
               br(),
 
-              div(style="text-align: center;", actionButton('getEval', 'Go!'))
+              uiOutput('goButton')
             ),
 
             column
@@ -2739,6 +2739,14 @@ visvow <- function()
         }
       })
 
+      output$goButton <- renderUI(
+      {
+        if (length(unique(vowelTab()$speaker)) > 1)
+          return(div(style="text-align: center;", actionButton('getEval', 'Go!')))
+        else
+          return(div(style="text-align: center;", p("You need multiple speakers for this function.")))
+      })
+      
       vowelScale5 <- reactive(
       {
         return(vowelScale(vowelSame(), global$replyScale5, 50))
@@ -3144,6 +3152,9 @@ visvow <- function()
 
       output$table5 <- renderFormattable(
       {
+        if (length(unique(vowelTab()$speaker)) < 2)
+          return(NULL)
+        
         if (input$selAuth5=="Flynn & Foulkes (2011)")
           req(input$selEval51)
 
