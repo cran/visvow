@@ -47,7 +47,7 @@
 #' }
 #'
 #' @import
-#' shiny shinyBS stats tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne plyr grid svglite Cairo
+#' shiny shinyBS stats tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne plyr grid svglite Cairo tikzDevice shinybusy
 #'
 #' @importFrom
 #' formattable renderFormattable formattable formatter style color_tile formattableOutput
@@ -1398,10 +1398,29 @@ visvow <- function()
             br(),
 
             div(img(src = 'www/format.png', height=330), style="margin-left: 26px;"),
-            br(),br(),
+            br(), br(),
             h5(strong("Example input file")),
             p("In order to try Visible Vowels an example spreadsheet can be downloaded ", a("here", href = "www/example.xlsx", target = "_blank"), "and be loaded by this program."),
             br(),
+            h5(strong("Graphs")),
+            p("Graphs can be saved in six formats: JPG, PNG, SVG, EPS, PDF and TEX. TEX files are created with TikZ. When using this format, it is assumed that XeLaTeX is installed. Generating a TikZ may take a long time. When including a TikZ file in a LaTeX document, you need to use a font that supports the IPA Unicode characters, for example: 'Doulos SIL', 'Charis SIL' or 'Linux Libertine O'. You also need to adjust the left margin and the scaling of the graph. The LaTeX document should be compiled with", code("xelatex"), ". Example of a LaTeX file in which a TikZ file is included:"),
+            br(),
+        
+            code(style="margin-left: 36px;", "\\documentclass{minimal}"),
+            br(), br(),
+            code(style="margin-left: 36px;", "\\usepackage{tikz}"),
+            br(),
+            code(style="margin-left: 36px;", "\\usepackage{fontspec}"),
+            br(),
+            code(style="margin-left: 36px;", "\\setmainfont{Linux Libertine O}"),
+            br(), br(),
+            code(style="margin-left: 36px;", "\\begin{document}"),
+            br(),
+            code(style="margin-left: 36px;", "{\\hspace*{-3cm}\\scalebox{0.8}{\\input{formantPlot.TEX}}}"),
+            br(),
+            code(style="margin-left: 36px;", "\\end{document}"),
+            br(), br(), br(),
+            
             h5(strong("Implementation")),
             p("This program is implemented as a Shiny app. Shiny was developed by RStudio. This app uses the following R packages:"),
             br(),
@@ -1431,7 +1450,9 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>grid</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>ggsave_autosize</span>"),p("Z. Lin (GovTech, Singapore) developed this function for autocropping faceted plots made by using ggplot2"))),
               tags$li(tags$span(HTML("<span style='color:blue'>svglite</span>"),p("Hadley Wickham, Lionel Henry, T Jake Luciani, Matthieu Decorde and Vaudor Lise (2016). svglite: An 'SVG' Graphics Device. R package version 1.2.0. https://CRAN.R-project.org/package=svglite"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Cairo</span>"),p("Simon Urbanek and Jeffrey Horner (2015). Cairo: R graphics device using cairo graphics library for creating high-quality bitmap (PNG, JPEG, TIFF),  vector (PDF, SVG, PostScript) and display (X11 and Win32) output. R package version 1.5-9. https://CRAN.R-project.org/package=Cairo")))
+              tags$li(tags$span(HTML("<span style='color:blue'>Cairo</span>"),p("Simon Urbanek and Jeffrey Horner (2015). Cairo: R graphics device using cairo graphics library for creating high-quality bitmap (PNG, JPEG, TIFF),  vector (PDF, SVG, PostScript) and display (X11 and Win32) output. R package version 1.5-9. https://CRAN.R-project.org/package=Cairo"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>tikzDevice</span>"),p("Charlie Sharpsteen and Cameron Bracken (2020). tikzDevice: R Graphics Output in LaTeX Format. R package version 0.12.3.1. https://CRAN.R-project.org/package=tikzDevice"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>shinybusy</span>"),p("Fanny Meyer and Victor Perrier (2020). shinybusy: Busy Indicator for 'Shiny' Applications. R package version 0.2.2. https://CRAN.R-project.org/package=shinybusy")))
             )),
 
             br(),
@@ -2477,7 +2498,7 @@ visvow <- function()
 
       output$selFormat0b <- renderUI(
       {
-        options <- c("JPG","PNG","SVG","EPS","PDF")
+        options <- c("JPG","PNG","SVG","EPS","PDF","TEX")
         selectInput('replyFormat0b', label=NULL, options, selected = "PNG", selectize=FALSE, multiple=FALSE)
       })
 
@@ -2499,6 +2520,8 @@ visvow <- function()
         else
           plot <- ggplot()+theme_bw()
         
+        show_modal_spinner()
+        
         if (input$replyFormat0b=="JPG")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
@@ -2513,9 +2536,17 @@ visvow <- function()
         else
         if (input$replyFormat0b=="PDF")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
+        else
+        if (input$replyFormat0b=="TEX")
+        {
+          tikzDevice::tikz(file=file, width=width, height=height, engine='xetex')
+          print(plot)
+        }
         else {}
 
-        grDevices::dev.off()
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       })
 
       ##########################################################################
@@ -4563,7 +4594,7 @@ visvow <- function()
 
       output$selFormat1b <- renderUI(
       {
-        options <- c("JPG","PNG","SVG","EPS","PDF")
+        options <- c("JPG","PNG","SVG","EPS","PDF","TEX")
         selectInput('replyFormat1b', label=NULL, options, selected = "PNG", selectize=FALSE, multiple=FALSE)
       })
 
@@ -4585,6 +4616,8 @@ visvow <- function()
         else
           plot <- ggplot()+theme_bw()
         
+        show_modal_spinner()
+        
         if (input$replyFormat1b=="JPG")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
@@ -4599,9 +4632,17 @@ visvow <- function()
         else
         if (input$replyFormat1b=="PDF")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
+        else    
+        if (input$replyFormat1b=="TEX")
+        {
+          tikzDevice::tikz(file=file, width=width, height=height, engine='xetex')
+          print(plot)
+        }
         else {}
 
-        grDevices::dev.off()
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       }
 
       save3D <- function(file)
@@ -4615,6 +4656,8 @@ visvow <- function()
         scale   <-  72/res1()
         width   <- convertUnit(x=unit(700, "pt"), unitTo="in", valueOnly=TRUE) * scale
         height  <- convertUnit(x=unit(550, "pt"), unitTo="in", valueOnly=TRUE) * scale
+
+        show_modal_spinner()
 
         if (input$replyFormat1b=="JPG")
           grDevices::jpeg      (file, width = width0, height = height0, pointsize = 12, res = 300)
@@ -4630,6 +4673,9 @@ visvow <- function()
         else
         if (input$replyFormat1b=="PDF")
           grDevices ::cairo_pdf(file, width = width , height = height , pointsize = 12)
+        else    
+        if (input$replyFormat1b=="TEX")
+          tikzDevice::tikz     (file, width = width , height = height , pointsize = 12, engine='xetex')
         else {}
 
         if ((length(replyTimes1())>0) && (nrow(vowelSub1())>0))
@@ -4637,7 +4683,9 @@ visvow <- function()
         else
           graphics::plot.new()
 
-        grDevices::dev.off()
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       }
 
       output$download1b <- downloadHandler(filename = fileName1b, content = function(file)
@@ -5343,7 +5391,7 @@ visvow <- function()
 
       output$selFormat4b <- renderUI(
       {
-        options <- c("JPG","PNG","SVG","EPS","PDF")
+        options <- c("JPG","PNG","SVG","EPS","PDF","TEX")
         selectInput('replyFormat4b', label=NULL, options, selected = "PNG", selectize=FALSE, multiple=FALSE)
       })
 
@@ -5364,6 +5412,8 @@ visvow <- function()
           plot <- plotGraph4()
         else
           plot <- ggplot()+theme_bw()
+          
+        show_modal_spinner()
         
         if (input$replyFormat4b=="JPG")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
@@ -5379,9 +5429,17 @@ visvow <- function()
         else
         if (input$replyFormat4b=="PDF")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
+        else
+        if (input$replyFormat4b=="TEX")
+        {
+          tikzDevice::tikz(file=file, width=width, height=height, engine='xetex')
+          print(plot)
+        }
         else {}
 
-        grDevices::dev.off()
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       })
 
       ##########################################################################
@@ -5998,7 +6056,7 @@ visvow <- function()
 
       output$selFormat2b <- renderUI(
       {
-        options <- c("JPG","PNG","SVG","EPS","PDF")
+        options <- c("JPG","PNG","SVG","EPS","PDF","TEX")
         selectInput('replyFormat2b', label=NULL, options, selected = "PNG", selectize=FALSE, multiple=FALSE)
       })
 
@@ -6020,6 +6078,8 @@ visvow <- function()
         else
           plot <- ggplot()+theme_bw()
         
+        show_modal_spinner()
+        
         if (input$replyFormat2b=="JPG")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
@@ -6034,10 +6094,17 @@ visvow <- function()
         else
         if (input$replyFormat2b=="PDF")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
+        else    
+        if (input$replyFormat2b=="TEX")
+        {
+          tikzDevice::tikz(file=file, width=width, height=height, engine='xetex')
+          print(plot)
+        }
         else {}
 
-        grDevices::dev.off()
-
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       })
 
       ##########################################################################
@@ -6080,7 +6147,7 @@ visvow <- function()
 
       vowelSubS3 <- reactive(
       {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0)  || (length(input$replyVowel3)<3) || (length(replyTimes3())==0) || (length(selFormant3())==0))
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0)  || (((input$selMetric3=="Euclidean") & (length(input$replyVowel3)<1)) | ((input$selMetric3=="Accdist") & (length(input$replyVowel3)<3))) || (length(replyTimes3())==0) || (length(selFormant3())==0))
           return(NULL)
 
         vT <- vowelNorm3()
@@ -6774,7 +6841,7 @@ visvow <- function()
       {
         output$graph3 <- renderPlot(height = 550, width = 700, res = res3(),
         {
-          if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelCor3())))
+          if ((((input$selMetric3=="Euclidean") & (length(input$replyVowel3)>=1)) | ((input$selMetric3=="Accdist") & (length(input$replyVowel3)>=3))) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0) && (!is.null(vowelCor3())))
           {
             plotGraph3()
           }
@@ -6853,7 +6920,7 @@ visvow <- function()
 
       output$download3a <- downloadHandler(filename = fileName3a, content = function(file)
       {
-        if ((length(input$replyVowel3)>=3) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0)  && (!is.null(vowelDiff3())))
+        if ((((input$selMetric3=="Euclidean") & (length(input$replyVowel3)>=1)) | ((input$selMetric3=="Accdist") & (length(input$replyVowel3)>=3))) && (length(input$replyGrouping3)>0) && (length(input$catGrouping3)>0) && (length(replyTimes3())>0) && (length(selFormant3())>0)  && (!is.null(vowelDiff3())))
         {
           vT <- data.frame(rownames(vowelDiff3()), vowelDiff3())
           colnames(vT) <- c("element", colnames(vowelDiff3()))
@@ -6894,7 +6961,7 @@ visvow <- function()
 
       output$selFormat3b <- renderUI(
       {
-        options <- c("JPG","PNG","SVG","EPS","PDF")
+        options <- c("JPG","PNG","SVG","EPS","PDF","TEX")
         selectInput('replyFormat3b', label=NULL, options, selected = "PNG", selectize=FALSE, multiple=FALSE)
       })
 
@@ -6916,6 +6983,8 @@ visvow <- function()
         else
           plot <- ggplot()+theme_bw()
         
+        show_modal_spinner()
+        
         if (input$replyFormat3b=="JPG")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device="jpeg")
         else
@@ -6930,9 +6999,17 @@ visvow <- function()
         else
         if (input$replyFormat3b=="PDF")
           ggsave(filename=file, plot=plot, scale=scale, width=width, height=height, units="in", dpi=300, device=grDevices::cairo_pdf)
+        else    
+        if (input$replyFormat3b=="TEX")
+        {
+          tikzDevice::tikz(file=file, width=width, height=height, engine='xetex')
+          print(plot)
+        }
         else {}
 
-        grDevices::dev.off()
+        grDevices::graphics.off()
+        
+        remove_modal_spinner()
       })
     }
   )
