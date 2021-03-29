@@ -511,7 +511,97 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
     }
   }
 
-  if (replyNormal==" Heeringa & Van de Velde")
+  if (replyNormal==" Bigham")
+  {
+    vT <- data.frame()
+    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
+      
+      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      
+      iF1 <- min(vowelF1$f1)
+      iF2 <- max(vowelF2$f2)
+      
+      uF1 <- min(vowelF1$f1)
+      uF2 <- min(vowelF2$f2)
+      
+      oF1 <- max(vowelF1$f1)
+      oF2 <- min(vowelF2$f2)
+      
+      aF1 <- max(vowelF1$f1)
+
+                          index <- which(vowelF2$vowel ==        intToUtf8("0x00E6"))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x00E6"), intToUtf8("0x02D1")))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x00E6"), intToUtf8("0x02D0")))
+      if (!length(index)) index <- which(vowelF2$vowel ==        intToUtf8("0x0061"))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x0061"), intToUtf8("0x02D1")))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x0061"), intToUtf8("0x02D0")))
+      if (!length(index)) index <- which(vowelF2$vowel ==        intToUtf8("0x025B"))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x025B"), intToUtf8("0x02D1")))
+      if (!length(index)) index <- which(vowelF2$vowel == paste0(intToUtf8("0x025B"), intToUtf8("0x02D0")))
+                          
+      aF2 <- vowelF2$f2[index]
+
+      centroidF1 <- (iF1 + uF1 + oF1 + aF1)/4
+      centroidF2 <- (iF2 + uF2 + oF2 + aF2)/4
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        vTsub[,indexTime+2] <- vTsub[,indexTime+2] / centroidF1
+        vTsub[,indexTime+3] <- vTsub[,indexTime+3] / centroidF2
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+  
+  if (replyNormal==" Heeringa & Van de Velde I")
+  {
+    vT <- data.frame()
+    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
+      
+      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      
+      k <- grDevices::chull(vowelF1$f1,vowelF2$f2)
+      
+      xx <- vowelF1$f1[k]
+      xx[length(xx)+1] <- xx[1]
+      yy <- vowelF2$f2[k]
+      yy[length(yy)+1] <- yy[1]
+      
+      if ((length(xx)>=3) & (length(yy)>=3))
+        pc <- poly_center(xx,yy)
+      else
+        pc <- c(mean(xx),mean(yy))
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        vTsub[,indexTime+2] <- vTsub[,indexTime+2]/pc[1]
+        vTsub[,indexTime+3] <- vTsub[,indexTime+3]/pc[2]
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+  
+  if (replyNormal==" Heeringa & Van de Velde II")
   {
     vT <- data.frame()
     vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
@@ -533,7 +623,24 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       if ((length(xx)>=3) & (length(yy)>=3))
         pc <- poly_center(xx,yy)
       else
-        pc <- c(mean(xx),mean(yy))
+        pc <- c(mean(vowelF1$f1[k]),mean(vowelF2$f2[k]))
+      
+      xxi <- approx(1:length(xx), xx, n = 1000)$y
+      yyi <- approx(1:length(yy), yy, n = 1000)$y
+      
+      xxi <- xxi[1:(length(xxi)-1)]
+      yyi <- yyi[1:(length(yyi)-1)]
+
+      xxg <- cut(xxi, breaks=10)
+      yyg <- cut(yyi, breaks=10)
+
+      ag <- aggregate(cbind(xxi,yyi)~xxg+yyg, FUN=mean)
+
+      mean1 <- mean(ag$xxi)
+      mean2 <- mean(ag$yyi)
+      
+      sd1 <- sd(ag$xxi)
+      sd2 <- sd(ag$yyi)
 
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
 
@@ -541,8 +648,8 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
 
-        vTsub[,indexTime+2] <- vTsub[,indexTime+2] / pc[1]
-        vTsub[,indexTime+3] <- vTsub[,indexTime+3] / pc[2]
+        vTsub[,indexTime+2] <- (vTsub[,indexTime+2]-pc[1])/sd1
+        vTsub[,indexTime+3] <- (vTsub[,indexTime+3]-pc[2])/sd2
       }
 
       vT <- rbind(vT,vTsub)
@@ -729,14 +836,20 @@ optionsNormal <- function(vowelTab, replyScale, onlyF1F2)
     options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
 
   if (onlyF1F2)
-    options3 <- c(options3, "Heeringa & Van de Velde (2018)" = " Heeringa & Van de Velde")
+    options3 <- c(options3, "Bigham (2008)" = " Bigham")
 
+    if (onlyF1F2)
+      options3 <- c(options3, "Heeringa & Van de Velde (2021) I"  = " Heeringa & Van de Velde I" )
+    
+    if (onlyF1F2)
+      options3 <- c(options3, "Heeringa & Van de Velde (2021) II" = " Heeringa & Van de Velde II")
+    
   ###
 
   options4 <- c()
 
   if  (replyScale==" Hz")
-    options4 <- c(options4, "Nearey (1978) I" = " Nearey I")
+    options4 <- c(options4, "Nearey (1978) I"  = " Nearey I" )
 
   if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
       (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
@@ -745,7 +858,7 @@ optionsNormal <- function(vowelTab, replyScale, onlyF1F2)
 
   if ((onlyF1F2) &
       (replyScale==" Hz"))
-    options4 <- c(options4, "Labov (2006) I" = " Labov I")
+    options4 <- c(options4, "Labov (2006) I"  = " Labov I" )
 
   if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
       (replyScale==" Hz"))
@@ -2578,8 +2691,7 @@ visvow <- function()
 
                        <br><br>
 
-                       After selecting 'Evaluate' the evaluation methods of Flynn & Foulkes (2011) and Van der Harst (2011) become available.
-                       When using the methods of Flynn, we do not not assume the vowel space to be a quadrilateral, but we calculate the convex hull which allows us to use the procedure for vowel spaces of any shape.
+                       After selecting 'Evaluate' the evaluation methods of Fabricius et al. (2009) and Van der Harst (2011) become available. Like Fabricius at al. (2009) the area of a vowel space is obtained on the basis of the convex hull that encloses the vowels in the vowel space. Unlike Fabricius et al. (2009) and following Flynn (2011) / Flynn & Foulkes (2011) the overlap of the vowel areas of the speakers is calculated as the area of the intersection of the vowel spaces of <i>all</i> speakers divided by the area of the union of the vowel spaces of <i>all</i> speakers.
 
                        <br><br>
 
@@ -2596,7 +2708,7 @@ visvow <- function()
                        <br><br>
 
                        When F3 is checked, only those normalization procedures are evaluated that are able to normalize F3 scores.
-                       Moreover, only results of the evaluation methods of Van der Harst (2011) are shown, since the evaluation methods of Flynn & Foulkes work only in F1/F2 space.
+                       Moreover, only results of the evaluation methods of Van der Harst (2011) are shown, since the evaluation methods of Fabricius et al. work only in F1/F2 space.
 
                        <br><br>
 
@@ -2614,6 +2726,8 @@ visvow <- function()
 
                        <span style='font-weight: bold;'>References</span><br>
 
+                       Fabricius, A., Watt, D., & Johnson, D. E. (2009). A comparison of three speaker-intrinsic vowel formant frequency normalization algorithms for sociophonetics. <i>Language Variation and Change</i>, 21(3), 413-435.
+                       <br>
                        Flynn, N. (2011), Comparing Vowel Formant Normalisation Procedures. In: <i>York Papers in Linguistics Series 2</i>, pp. 1-28.
                        <br>
                        Flynn, N., & Foulkes, P. (2011). Comparing Vowel Formant Normalization Methods. In <i>Proceedings of the 17th International Congress of Phonetic Sciences, 17-21 August 2011 Hongkong</i>, pp. 683-686.
@@ -2727,9 +2841,9 @@ visvow <- function()
         {
           return(radioButtons(inputId  = 'selAuth5',
                               label    = 'Author:',
-                              choices  = c("Flynn & Foulkes (2011)",
+                              choices  = c("Fabricius et al. (2009)",
                                            "Van der Harst (2011)"),
-                              selected =   "Flynn & Foulkes (2011)",
+                              selected =   "Fabricius et al. (2009)",
                               inline   = FALSE))
         }
 
@@ -2748,13 +2862,13 @@ visvow <- function()
       {
         req(input$selAuth5)
 
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Flynn & Foulkes (2011)"))
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
         {
           return(radioButtons(inputId  = 'selEval51',
                               label    = 'Method:',
-                              choices  = c("minimize variance of vowel spaces",
-                                           "maximize overlap of vowel spaces"),
-                              selected =   "minimize variance of vowel spaces",
+                              choices  = c("equalize vowel space areas",
+                                           "improve vowel space overlap"),
+                              selected =   "equalize vowel space areas",
                               inline   = FALSE))
         }
 
@@ -2794,6 +2908,10 @@ visvow <- function()
         else
           return(NULL)
 
+        if (max(replyTimesN) > nPoints)
+          replyTimesN <- Round(nPoints/2)
+        else {}
+        
         vL1 <- vowelLong1(vowelScale5(),replyTimesN)
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
@@ -2899,7 +3017,9 @@ visvow <- function()
                               " Lobanov",
                               " Watt & Fabricius",
                               " Fabricius et al.",
-                              " Heeringa & Van de Velde",
+                              " Bigham",
+                              " Heeringa & Van de Velde I" ,
+                              " Heeringa & Van de Velde II",
                               " Nearey I")
 
         matrix1  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
@@ -2928,7 +3048,7 @@ visvow <- function()
 
                 vT <- vowelSubS5()
 
-                # Flynn & Foulkes (2011)
+                # Fabricius et al. (2009)
 
                 if (emptyF3() || !input$replyF35)
                 {
@@ -2949,7 +3069,12 @@ visvow <- function()
                     polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
                   }
 
-                  matrix1[j,i] <- (sd(area)/mean(area))^2
+                  SCV  <- (sd(area )/mean(area ))^2
+                  
+                  if ((i==1) & (j==1))
+                    SCV0 <- SCV
+                  
+                  matrix1[j,i] <- 1 - (SCV/SCV0)
 
                   ##
 
@@ -3186,7 +3311,7 @@ visvow <- function()
         if (length(unique(vowelTab()$speaker)) < 2)
           return(NULL)
         
-        if (input$selAuth5=="Flynn & Foulkes (2011)")
+        if (input$selAuth5=="Fabricius et al. (2009)")
           req(input$selEval51)
 
         if (input$selAuth5=="Van der Harst (2011)")
@@ -3194,14 +3319,14 @@ visvow <- function()
 
         df <- data.frame()
 
-        if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "minimize variance of vowel spaces"))
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
         {
           df <- evalResults()[[1]]
-          col1 <- "yellow"
-          col2 <- "turquoise"
+          col1 <- "turquoise"
+          col2 <- "yellow"
         }
 
-        if ((input$selAuth5=="Flynn & Foulkes (2011)") && (input$selEval51 == "maximize overlap of vowel spaces"))
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
         {
           df <- evalResults()[[2]]
           col1 <- "turquoise"
@@ -3315,6 +3440,11 @@ visvow <- function()
         else
           return(NULL)
 
+        if (!is.null(replyTimesN1()))
+          replyTimesN <- replyTimesN1()
+        else
+          return(NULL)
+        
         vL1 <- vowelLong1(vowelScale1(),replyTimesN)
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
@@ -6137,6 +6267,10 @@ visvow <- function()
         else
           return(NULL)
 
+        if (max(replyTimesN) > nPoints)
+          replyTimesN <- Round(nPoints/2)
+        else {}
+        
         vL1 <- vowelLong1(vowelScale3(),replyTimesN)
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
