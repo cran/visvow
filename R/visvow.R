@@ -1569,7 +1569,7 @@ visvow <- function()
             )),
 
             br(),
-            p("Visible Vowels allows to convert and normalize vowel data and calculate some specific metrics. To get all the details on how these values are calculated, type ", span(style="font-family: monospace; font-size: 100%;", 'vignette("visvow")'), " in the R terminal."),
+            p("Visible Vowels allows to convert and normalize vowel data and calculate some specific metrics. To get all the details on how these values are calculated, type ", span(style="font-family: monospace; font-size: 100%;", 'vignette("visvow")'), " in the R console."),
             br(),
             h5(strong("How to cite this app")),
             p("Heeringa, W. & Van de Velde, H. (2018). \u201CVisible Vowels: a Tool for the Visualization of Vowel Variation.\u201D In ",tags$i("Proceedings CLARIN Annual Conference 2018, 8 - 10 October, Pisa, Italy."),"CLARIN ERIC."),
@@ -2686,15 +2686,6 @@ visvow <- function()
 
                        <span style='font-weight: bold;'>Evaluate</span><br>
 
-                       In case multiple vowels of the same vowel category are pronounced by the same speaker, their formant frequencies are averaged, and evaluation is carried out on the basis of these averages.
-                       When one or more variables are entered under 'Anatomic var(s)' and/or 'Socioling. var(s)', vowels are averaged per (combination of) condition.
-
-                       <br><br>
-
-                       After selecting 'Evaluate' the evaluation methods of Fabricius et al. (2009) and Van der Harst (2011) become available. Like Fabricius at al. (2009) the area of a vowel space is obtained on the basis of the convex hull that encloses the vowels in the vowel space. Unlike Fabricius et al. (2009) and following Flynn (2011) / Flynn & Foulkes (2011) the overlap of the vowel areas of the speakers is calculated as the area of the intersection of the vowel spaces of <i>all</i> speakers divided by the area of the union of the vowel spaces of <i>all</i> speakers.
-
-                       <br><br>
-
                        The results are presented as a table where the columns represent the scale conversion methods and the rows the normalization procedures.
                        Each score is shown on a background with a color somewhere in between turquoise and yellow.
                        The more yellow the background is, the better the result.
@@ -2702,37 +2693,23 @@ visvow <- function()
 
                        <br><br>
 
-                       For 'Hz' frequencies all normalization methods are given.
-                       In order to avoid double scaling, for the other scales no scores are given for normalization methods that implicitely scale frequencies themselves.
-
-                       <br><br>
-
-                       When F3 is checked, only those normalization procedures are evaluated that are able to normalize F3 scores.
-                       Moreover, only results of the evaluation methods of Van der Harst (2011) are shown, since the evaluation methods of Fabricius et al. work only in F1/F2 space.
-
-                       <br><br>
-
-                       When f0 and/or F3 frequencies are not given in the data set, normalization procedures that use f0 and/or F3 for normalizing are left out in the results.
-
-                       <br><br>
-
                        <span style='font-weight: bold;'>Compare</span><br>
 
-                       After selecting 'Compare' one can choose from comparing scale conversion methods and speaker normalization methods.
+                       After having selected the option 'Compare' one can choose to compare either scale conversion methods or speaker normalization methods.
                        When comparing the scale conversion methods, the unnormalized formant measurements are used.
                        When comparing the speaker normalization methods, the raw Hz formant measurements are used.
+
+                       <br><br>
+
+                       For more details about the implementation of the methods that are used in this tab type <span style='font-family: monospace; font-size: 90%;'>vignette('visvow')</span> in the R console and read section 6.
 
                        <br><br>
 
                        <span style='font-weight: bold;'>References</span><br>
 
                        Fabricius, A., Watt, D., & Johnson, D. E. (2009). A comparison of three speaker-intrinsic vowel formant frequency normalization algorithms for sociophonetics. <i>Language Variation and Change</i>, 21(3), 413-435.
-                       <br>
-                       Flynn, N. (2011), Comparing Vowel Formant Normalisation Procedures. In: <i>York Papers in Linguistics Series 2</i>, pp. 1-28.
-                       <br>
-                       Flynn, N., & Foulkes, P. (2011). Comparing Vowel Formant Normalization Methods. In <i>Proceedings of the 17th International Congress of Phonetic Sciences, 17-21 August 2011 Hongkong</i>, pp. 683-686.
-                       <br>
-                       Van der Harst, S. (2011). <i>The Vowel Space Paradox. A Sociophonetic Study on Dutch</i>. Ph.D. dissertation, Radboud University of Nijmegen, Utrecht: LOT.
+                       <br>                   
+                       Adank, P., Smits, R., & Van Hout, R. (2004). A comparison of vowel normalization procedures for language variation research. <i>The Journal of the Acoustical Society of America</i>, 116(5), 3099-3107.
                        <br>
 
                        </span>")),
@@ -2841,8 +2818,8 @@ visvow <- function()
         {
           return(radioButtons(inputId  = 'selAuth5',
                               label    = 'Author:',
-                              choices  = c("Fabricius et al. (2009)",
-                                           "Van der Harst (2011)"),
+                              choices  = c("Adank et al. (2004)",
+                                           "Fabricius et al. (2009)"),
                               selected =   "Fabricius et al. (2009)",
                               inline   = FALSE))
         }
@@ -2862,17 +2839,7 @@ visvow <- function()
       {
         req(input$selAuth5)
 
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
-        {
-          return(radioButtons(inputId  = 'selEval51',
-                              label    = 'Method:',
-                              choices  = c("equalize vowel space areas",
-                                           "improve vowel space overlap"),
-                              selected =   "equalize vowel space areas",
-                              inline   = FALSE))
-        }
-
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Van der Harst (2011)"))
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Adank et al. (2004)"))
         {
           return(radioButtons(inputId  = 'selEval52',
                               label    = 'Method:',
@@ -2880,6 +2847,16 @@ visvow <- function()
                                            "minimize anatomic variation",
                                            "preserve sociolinguistic variation"),
                               selected =   "preserve phonemic variation",
+                              inline   = FALSE))
+        }
+        
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
+        {
+          return(radioButtons(inputId  = 'selEval51',
+                              label    = 'Method:',
+                              choices  = c("equalize vowel space areas",
+                                           "improve vowel space overlap"),
+                              selected =   "equalize vowel space areas",
                               inline   = FALSE))
         }
       })
@@ -3048,51 +3025,7 @@ visvow <- function()
 
                 vT <- vowelSubS5()
 
-                # Fabricius et al. (2009)
-
-                if (emptyF3() || !input$replyF35)
-                {
-                  speakers <- unique(vT$speaker)
-
-                  vTsub <- subset(vT, speaker==speakers[1])
-                  indices <- grDevices::chull(vTsub$F1, vTsub$F2)
-                  area <- abs(polyarea(vTsub$F1[indices], vTsub$F2[indices]))
-
-                  polySet <- asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), 1)
-
-                  for (k in 2:length(speakers))
-                  {
-                    vTsub <- subset(vT, speaker==speakers[k])
-                    indices <- grDevices::chull(vTsub$F1, vTsub$F2)
-                    area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
-
-                    polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
-                  }
-
-                  SCV  <- (sd(area )/mean(area ))^2
-                  
-                  if ((i==1) & (j==1))
-                    SCV0 <- SCV
-                  
-                  matrix1[j,i] <- 1 - (SCV/SCV0)
-
-                  ##
-
-                  inter <- joinPolys(polySet, operation="INT"  )
-                  union <- joinPolys(polySet, operation="UNION")
-
-                  areaI <- abs(polyarea(inter$X, inter$Y))
-                  areaU <- abs(polyarea(union$X, union$Y))
-
-                  matrix2[j,i] <- areaI / areaU
-                }
-                else
-                {
-                  matrix1[j,i] <- NA
-                  matrix2[j,i] <- NA
-                }
-
-                # Van der Harst (2011)
+                # Adank et al. (2004)
 
                 if (emptyF3() || !input$replyF35)
                   model <- lda(factor(vowel)~cbind(F1,F2    ), data=vT)
@@ -3101,7 +3034,7 @@ visvow <- function()
 
                 p <- predict(model)
                 yp <- cbind(as.character(vT$vowel), as.character(p$class))
-                matrix3[j,i] <- perc(yp)
+                matrix1[j,i] <- perc(yp)
 
                 ##
 
@@ -3130,10 +3063,10 @@ visvow <- function()
                   model <- lda(x=Preds[, 1:ncol(Preds)], grouping=vars1)
                   p <- predict(model)
                   yp <- cbind(as.character(vT$vars1), as.character(p$class))
-                  matrix4[j,i] <- perc(yp)
+                  matrix2[j,i] <- perc(yp)
                 }
                 else
-                  matrix4[j,i] <- NA
+                  matrix2[j,i] <- NA
 
                 ##
 
@@ -3156,10 +3089,65 @@ visvow <- function()
                     Perc <- c(Perc, perc(yp))
                   }
 
-                  matrix5[j,i] <- mean(Perc)
+                  matrix3[j,i] <- mean(Perc)
                 }
                 else
+                  matrix3[j,i] <- NA
+
+                # Fabricius et al. (2009)
+
+                if (emptyF3() || !input$replyF35)
+                {
+                  fab1 <- rep(NA, length(input$replyTimes5))
+                  fab2 <- rep(NA, length(input$replyTimes5))
+              
+                  for (t in (1:length(input$replyTimes5)))
+                  {
+                    speakers <- unique(vT$speaker)
+              
+                    vTsub <- subset(vT, (speaker==speakers[1]) & (time==t))
+                    
+                    indices <- grDevices::chull(vTsub$F1, vTsub$F2)
+                    area <- abs(polyarea(vTsub$F1[indices], vTsub$F2[indices]))
+                  
+                    polySet <- asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), 1)
+                  
+                    for (k in 2:length(speakers))
+                    {
+                      vTsub <- subset(vT, (speaker==speakers[k]) & (time==t))
+                  
+                      indices <- grDevices::chull(vTsub$F1, vTsub$F2)
+                      area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
+                  
+                      polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
+                    }
+                  
+                    SCV <- (sd(area)/mean(area))^2
+                  
+                    if ((i==1) & (j==1))
+                      SCV0 <- SCV
+                  
+                    fab1[t] <- 1 - (SCV/SCV0)
+                  
+                    ##
+                  
+                    inter <- joinPolys(polySet, operation="INT"  )
+                    union <- joinPolys(polySet, operation="UNION")
+                  
+                    areaI <- abs(polyarea(inter$X, inter$Y))
+                    areaU <- abs(polyarea(union$X, union$Y))
+                  
+                    fab2[t] <- areaI / areaU
+                  }
+                  
+                  matrix4[j,i] <- mean(fab1)
+                  matrix5[j,i] <- mean(fab2)
+                }
+                else
+                {
+                  matrix4[j,i] <- NA
                   matrix5[j,i] <- NA
+                }
               }
             }
           }
@@ -3314,51 +3302,49 @@ visvow <- function()
         if (input$selAuth5=="Fabricius et al. (2009)")
           req(input$selEval51)
 
-        if (input$selAuth5=="Van der Harst (2011)")
+        if (input$selAuth5=="Adank et al. (2004)")
           req(input$selEval52)
 
         df <- data.frame()
 
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve phonemic variation"))
         {
           df <- evalResults()[[1]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
 
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "minimize anatomic variation"))
         {
           df <- evalResults()[[2]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
+          col1 <- "yellow"
+          col2 <- "turquoise"
         }
 
-        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve phonemic variation"))
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve sociolinguistic variation"))
         {
           df <- evalResults()[[3]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
 
-        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "minimize anatomic variation"))
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
         {
           df <- evalResults()[[4]]
-          col1 <- "yellow"
-          col2 <- "turquoise"
+          col1 <- "turquoise"
+          col2 <- "yellow"
         }
 
-        if ((input$selAuth5=="Van der Harst (2011)") && (input$selEval52 == "preserve sociolinguistic variation"))
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
         {
           df <- evalResults()[[5]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
 
-        formattable(df, align = rep("l", 11),
+        formattable(df, align = rep("l", 11), 
                     list(' ' = formatter("span", style = ~ style(display = "block", "font.weight" = "bold")),
-                         formattable::area() ~ color_tile(col1, col2)
-                        )
-                   )
+                         formattable::area() ~ color_tile(col1, col2)))
       })
 
       output$graph5 <- renderPlot(

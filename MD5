@@ -1,13 +1,13 @@
-c8d032c000d9382f43cffc7cb3148715 *DESCRIPTION
+e2e77057dca1066cc68967d0f898b215 *DESCRIPTION
 b6dde119479c3389c2a072e00fae5581 *NAMESPACE
-1ee54909628289fae974c05511171148 *R/visvow.R
-7c82a05e31068a548e32daad5dcc428e *build/partial.rdb
+9a330e08b18fe03845d490f3c3df879b *R/visvow.R
+a5ace3a0f166a44ee3c446ecf339d6f1 *build/partial.rdb
 dc08625bf15ac3c6e00e77a185b9aaa8 *build/vignette.rds
 6e8ac29945864c583055337b6ddb808f *inst/CITATION
 bf0dd08212aa82a63cd21424000ca18e *inst/FA1.jpg
 13a8892dc98afb451a59780a59dacf21 *inst/FA2.png
 a7351f5359090a102b014b0579da4e61 *inst/REFERENCES.bib
-4ab90e5f01b90bdfd5ad6007c0373b5f *inst/doc/visvow.pdf
+a65dc2f4ecc8e451979fcd53dcb007a4 *inst/doc/visvow.pdf
 e3a30b40718649a904ef90fed2c189d6 *inst/doc/visvow.pdf.asis
 8b8721d447f59ec4f1e59dd1ab80689d *inst/email.png
 9271f28cf09dd70b5c544a44a549f85d *inst/example.xlsx
