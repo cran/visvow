@@ -3122,13 +3122,8 @@ visvow <- function()
                       polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
                     }
                   
-                    SCV <- (sd(area)/mean(area))^2
-                  
-                    if ((i==1) & (j==1))
-                      SCV0 <- SCV
-                  
-                    fab1[t] <- 1 - (SCV/SCV0)
-                  
+                    fab1[t] <- (sd(area)/mean(area))^2
+
                     ##
                   
                     inter <- joinPolys(polySet, operation="INT"  )
@@ -3139,7 +3134,12 @@ visvow <- function()
                   
                     fab2[t] <- areaI / areaU
                   }
-                  
+
+                  if ((i==1) & (j==1))
+                    fab10 <- fab1
+
+                  fab1 <- 1 - (fab1/fab10)
+
                   matrix4[j,i] <- mean(fab1)
                   matrix5[j,i] <- mean(fab2)
                 }
