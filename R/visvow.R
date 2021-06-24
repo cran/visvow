@@ -36,7 +36,7 @@
 #'
 #' @seealso
 #' The Help tab in the app provides more information about the format of the input file.
-#' Details about conversion and normalization procedures and some specific metrics are found in the vignette.
+#' Details about scale conversion and speaker normalization procedures and some specific metrics are found in the vignette.
 #'
 #' @references
 #' \insertRef{johnson:2012}{visvow}
@@ -256,16 +256,17 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Peterson")
   {
     vT <- vowelScale
-
+    
     for (i in (1:nPoints))
     {
       indexTime <- indexVowel + 2 + ((i-1)*5)
-
+      
+      vT[,indexTime+1] <- vT[,indexTime+1]/vT[,indexTime+4]
       vT[,indexTime+2] <- vT[,indexTime+2]/vT[,indexTime+4]
       vT[,indexTime+3] <- vT[,indexTime+3]/vT[,indexTime+4]
     }
   }
-
+  
   if (replyNormal==" Sussman")
   {
     vT <- vowelScale
@@ -325,11 +326,12 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Thomas & Kendall")
   {
     vT <- vowelScale
-
+    
     for (i in (1:nPoints))
     {
       indexTime <- indexVowel + 2 + ((i-1)*5)
-
+      
+      vT[,indexTime+1] <- -1 * (vT[,indexTime+4] - vT[,indexTime+1])
       vT[,indexTime+2] <- -1 * (vT[,indexTime+4] - vT[,indexTime+2])
       vT[,indexTime+3] <- -1 * (vT[,indexTime+4] - vT[,indexTime+3])
     }
@@ -338,32 +340,35 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Gerstman")
   {
     vT <- data.frame()
+    
+    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel      , data=vTLong1Ag , FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
-      vTLong1Sub <- subset(vowelLong1, speaker==SpeaKer[q])
+      vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
 
-      minF <- rep(0,3)
-      maxF <- rep(0,3)
-
-      for (j in 1:3)
+      minF <- rep(0,4)
+      maxF <- rep(0,4)
+      
+      for (j in 1:4)
       {
-        minF[j] <- min(vTLong1Sub[,j+4])
-        maxF[j] <- max(vTLong1Sub[,j+4])
+        minF[j] <- min(vTLong1AgSub[,j+2])
+        maxF[j] <- max(vTLong1AgSub[,j+2])
       }
-
+      
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
-
+      
       for (i in (1:nPoints))
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
-
-        for (j in (1:3))
+        
+        for (j in (1:4))
         {
-          vTsub[,j+indexTime+1] <- 999 * ((vTsub[,j+indexTime+1]-minF[j]) / (maxF[j]-minF[j]))
+          vTsub[,j+indexTime] <- 999 * ((vTsub[,j+indexTime]-minF[j]) / (maxF[j]-minF[j]))
         }
       }
-
+      
       vT <- rbind(vT,vTsub)
     }
   }
@@ -372,66 +377,66 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   {
     vT <- data.frame()
     vTLong1Ag <- vowelLong1
-
+    
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
-
-      meanF <- rep(0,3)
-        sdF <- rep(0,3)
-
-      for (j in 1:3)
+      
+      meanF <- rep(0,4)
+        sdF <- rep(0,4)
+      
+      for (j in 1:4)
       {
-        meanF[j] <- mean(vTLong1AgSub[,j+4])
-          sdF[j] <-   sd(vTLong1AgSub[,j+4])
+        meanF[j] <- mean(vTLong1AgSub[,j+3])
+          sdF[j] <-   sd(vTLong1AgSub[,j+3])
       }
-
+      
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
-
+      
       for (i in (1:nPoints))
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
-
-        for (j in (1:3))
+        
+        for (j in (1:4))
         {
-          vTsub[,j+indexTime+1] <- (vTsub[,j+indexTime+1]-meanF[j])/sdF[j]
+          vTsub[,j+indexTime] <- (vTsub[,j+indexTime]-meanF[j])/sdF[j]
         }
       }
-
+      
       vT <- rbind(vT,vTsub)
     }
   }
-
+  
   if ((replyNormal==" Lobanov") & (nVoWel> 1))
   {
     vT <- data.frame()
     vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
-
+    
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
-
-      meanF <- rep(0,3)
-        sdF <- rep(0,3)
-
-      for (j in 1:3)
+      
+      meanF <- rep(0,4)
+        sdF <- rep(0,4)
+      
+      for (j in 1:4)
       {
-        meanF[j] <- mean(vTLong1AgSub[,j+4])
-          sdF[j] <-   sd(vTLong1AgSub[,j+4])
+        meanF[j] <- mean(vTLong1AgSub[,j+3])
+          sdF[j] <-   sd(vTLong1AgSub[,j+3])
       }
-
+      
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
-
+      
       for (i in (1:nPoints))
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
-
-        for (j in (1:3))
+        
+        for (j in (1:4))
         {
-          vTsub[,j+indexTime+1] <- (vTsub[,j+indexTime+1]-meanF[j])/sdF[j]
+          vTsub[,j+indexTime] <- (vTsub[,j+indexTime]-meanF[j])/sdF[j]
         }
       }
-
+      
       vT <- rbind(vT,vTsub)
     }
   }
@@ -659,51 +664,51 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Nearey I")
   {
     vT <- data.frame()
-    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
-
+    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
+    
     for (q in (1:nSpeaKer))
     {
       vTLong3AgSub  <- subset(vTLong3Ag, speaker==SpeaKer[q])
       speakerMean   <- aggregate(f~formant, data=vTLong3AgSub, FUN=mean)
-
+      
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
-
+      
       for (i in (1:nPoints))
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
-
-        for (j in (1:3))
+        
+        for (j in (1:4))
         {
-          vTsub[,j+indexTime+1] <- log(vTsub[,j+indexTime+1]) - speakerMean$f[j]
+          vTsub[,j+indexTime] <- log(vTsub[,j+indexTime]) - speakerMean$f[j]
         }
       }
-
+      
       vT <- rbind(vT,vTsub)
     }
   }
-
+  
   if (replyNormal==" Nearey II")
   {
     vT <- data.frame()
     vTLong4Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
-
+    
     for (q in (1:nSpeaKer))
     {
       vTLong4AgSub  <- subset(vTLong4Ag, speaker==SpeaKer[q])
       speakerMean   <- mean(vTLong4AgSub$f)
-
+      
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
-
+      
       for (i in (1:nPoints))
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
-
-        for (j in (1:3))
+        
+        for (j in (1:4))
         {
-          vTsub[,j+indexTime+1] <- log(vTsub[,j+indexTime+1]) - speakerMean
+          vTsub[,j+indexTime] <- log(vTsub[,j+indexTime]) - speakerMean
         }
       }
-
+      
       vT <- rbind(vT,vTsub)
     }
   }
@@ -727,9 +732,9 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
 
-        for (j in (1:2))
+        for (j in (2:3))
         {
-          vTsub[,j+indexTime+1] <- speakerFactor * vTsub[,j+indexTime+1]
+          vTsub[,j+indexTime] <- speakerFactor * vTsub[,j+indexTime]
         }
       }
 
@@ -756,9 +761,9 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
 
-        for (j in (1:3))
+        for (j in (2:4))
         {
-          vTsub[,j+indexTime+1] <- speakerFactor * vTsub[,j+indexTime+1]
+          vTsub[,j+indexTime] <- speakerFactor * vTsub[,j+indexTime]
         }
       }
 
@@ -788,80 +793,73 @@ optionsScale <- function()
   return(options)
 }
 
-optionsNormal <- function(vowelTab, replyScale, onlyF1F2)
+optionsNormal <- function(vowelTab, replyScale, noSelF0, noSelF3)
 {
   indexVowel <- grep("^vowel$", colnames(vowelTab))
 
+  nonEmptyF0 <- (sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab))
+  nonEmptyF3 <- (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab))
+  
   ###
-
+  
   options1 <- c()
-
-  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      onlyF1F2)
+  
+  if (nonEmptyF3 & noSelF3)
     options1 <- c(options1, "Peterson (1951)" = " Peterson")
-
-  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      (replyScale==" Hz"))
+  
+  if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
     options1 <- c(options1, "Sussman (1986)" = " Sussman")
-
-  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
-      (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      onlyF1F2)
+  
+  if (nonEmptyF0 & nonEmptyF3 & noSelF0 & noSelF3)
     options1 <- c(options1, "Syrdal & Gopal (1986)" = " Syrdal & Gopal")
-
-  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
-      (replyScale==" Hz"))
+  
+  if (nonEmptyF0 & noSelF0 & (replyScale==" Hz"))
     options1 <- c(options1, "Miller (1989)" = " Miller")
-
-  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      onlyF1F2)
+  
+  if (nonEmptyF3 & noSelF3)
     options1 <- c(options1, "Thomas & Kendall (2007)" = " Thomas & Kendall")
-
+  
   ###
-
+  
   options2 <- c()
-
-    options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
-
+  
+  options2 <- c(options2, "Gerstman (1968)" = " Gerstman")
+  
   ###
-
+  
   options3 <- c()
-
-    options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
-
-  if (onlyF1F2)
+  
+  options3 <- c(options3, "Lobanov (1971)" = " Lobanov")
+  
+  if (noSelF0 & noSelF3)
     options3 <- c(options3, "Watt & Fabricius (2002)" = " Watt & Fabricius")
-
-  if (onlyF1F2)
+  
+  if (noSelF0 & noSelF3)
     options3 <- c(options3, "Fabricius et al. (2009)" = " Fabricius et al.")
-
-  if (onlyF1F2)
+  
+  if (noSelF0 & noSelF3)
     options3 <- c(options3, "Bigham (2008)" = " Bigham")
-
-    if (onlyF1F2)
-      options3 <- c(options3, "Heeringa & Van de Velde (2021) I"  = " Heeringa & Van de Velde I" )
-    
-    if (onlyF1F2)
-      options3 <- c(options3, "Heeringa & Van de Velde (2021) II" = " Heeringa & Van de Velde II")
-    
+  
+  if (noSelF0 & noSelF3)
+    options3 <- c(options3, "Heeringa & Van de Velde (2021) I"  = " Heeringa & Van de Velde I" )
+  
+  if (noSelF0 & noSelF3)
+    options3 <- c(options3, "Heeringa & Van de Velde (2021) II" = " Heeringa & Van de Velde II")
+  
   ###
-
+  
   options4 <- c()
-
-  if  (replyScale==" Hz")
+  
+  if (replyScale==" Hz")
     options4 <- c(options4, "Nearey (1978) I"  = " Nearey I" )
-
-  if ((sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab)) &
-      (sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      (replyScale==" Hz"))
+  
+  if (nonEmptyF0 & nonEmptyF3 & (replyScale==" Hz"))
     options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
-
-  if ((onlyF1F2) &
-      (replyScale==" Hz"))
+  
+  if (noSelF0 & noSelF3 & (replyScale==" Hz"))
     options4 <- c(options4, "Labov (2006) I"  = " Labov I" )
-
-  if ((sum(vowelTab[,indexVowel+6]==0)!=nrow(vowelTab)) &
-      (replyScale==" Hz"))
+  
+  if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
     options4 <- c(options4, "Labov (2006) II" = " Labov II")
 
   ###
@@ -1076,68 +1074,6 @@ visvow <- function()
                   uiOutput('selFormat0b'),
                   downloadButton('download0b', 'Graph')
                 )
-              )
-            )
-          )
-        ),
-
-        tabPanel
-        (
-          title = "Normalization",
-          value = "normalization",
-
-          splitLayout
-          (
-            style = "border: 1px solid silver; min-height: 690px;",
-            cellWidths = c("32%", "68%"),
-            cellArgs = list(style = "padding: 6px"),
-
-            column
-            (
-              width=12,
-
-              fluidPage(
-                style = 'border: 1px solid silver; margin-top: 7px; padding-top: 4px; padding-bottom: 4px;',
-                align = "center",
-                actionLink("buttonHelp5", label="", icon=icon("info-circle", lib = "font-awesome"), style='color: #2c84d7; font-size: 180%; margin-left: 4px;')
-              ),
-
-              br(),
-
-              uiOutput('selTimes5'),
-              uiOutput('selTimesN5'),
-
-              splitLayout(
-                uiOutput('selVars51'),
-                uiOutput('selVars52')
-              ),
-
-              uiOutput('selF35'),
-              uiOutput('exclVow5'),
-
-              br(),
-
-              uiOutput('goButton')
-            ),
-
-            column
-            (
-              width = 12,
-              uiOutput("Graph5"),
-
-              hr(style='border-top: 1px solid #cccccc;'),
-
-              splitLayout
-              (
-                radioButtons(inputId  = 'selMeth5',
-                             label    = 'Choose:',
-                             choices  = c("Evaluate",
-                                          "Compare"),
-                             selected =   "Evaluate",
-                             inline   = FALSE),
-
-                uiOutput("getOpts5"),
-                uiOutput("getEval5")
               )
             )
           )
@@ -1472,6 +1408,68 @@ visvow <- function()
                   uiOutput('selFormat3b'),
                   downloadButton('download3b', 'Graph')
                 )
+              )
+            )
+          )
+        ),
+
+        tabPanel
+        (
+          title = "Evaluate",
+          value = "evaluate",
+
+          splitLayout
+          (
+            style = "border: 1px solid silver; min-height: 690px;",
+            cellWidths = c("32%", "68%"),
+            cellArgs = list(style = "padding: 6px"),
+
+            column
+            (
+              width=12,
+
+              fluidPage(
+                style = 'border: 1px solid silver; margin-top: 7px; padding-top: 4px; padding-bottom: 4px;',
+                align = "center",
+                actionLink("buttonHelp5", label="", icon=icon("info-circle", lib = "font-awesome"), style='color: #2c84d7; font-size: 180%; margin-left: 4px;')
+              ),
+
+              br(),
+
+              uiOutput('selTimes5'),
+              uiOutput('selTimesN5'),
+
+              splitLayout(
+                uiOutput('selVars51'),
+                uiOutput('selVars52')
+              ),
+
+              uiOutput("selF035"),
+              uiOutput('exclVow5'),
+
+              br(),
+
+              uiOutput('goButton')
+            ),
+
+            column
+            (
+              width = 12,
+              uiOutput("Graph5"),
+
+              hr(style='border-top: 1px solid #cccccc;'),
+
+              splitLayout
+              (
+                radioButtons(inputId  = 'selMeth5',
+                             label    = 'Choose:',
+                             choices  = c("Evaluate",
+                                          "Compare"),
+                             selected =   "Evaluate",
+                             inline   = FALSE),
+
+                uiOutput("getOpts5"),
+                uiOutput("getEval5")
               )
             )
           )
@@ -2664,743 +2662,6 @@ visvow <- function()
 
       ##########################################################################
 
-      global <- reactiveValues(replyScale5=NULL, replyNormal5=NULL)
-
-      observeEvent(input$buttonHelp5, {
-        showModal(modalDialog(easyClose = TRUE, fade = FALSE,
-          title =
-          HTML(paste0("<span style='font-weight: bold; font-size: 17px;'>Evaluation of normalization methods
-                       </span>")),
-
-          HTML(paste0("<span style='font-size: 15px;'>
-
-                       This tab is meant to be used in order to find the most suitable scale and vowel normalization method for your data set.
-                       Choose the settings and press the Go! button. Be prepared that running the evaluation procedures <b>may take some time</b>, depending on the size of your data set.
-
-                       <br><br>
-
-                       In case the speakers have pronounced different sets of vowels, the procedures are run on the basis of the set of vowels that are found across all speakers.
-                       The vowels thus excluded are printed.
-
-                       <br><br>
-
-                       <span style='font-weight: bold;'>Evaluate</span><br>
-
-                       The results are presented as a table where the columns represent the scale conversion methods and the rows the normalization procedures.
-                       Each score is shown on a background with a color somewhere in between turquoise and yellow.
-                       The more yellow the background is, the better the result.
-                       Note that for some tests larger scores represent better results, and for other tests smaller scores represent better results.
-
-                       <br><br>
-
-                       <span style='font-weight: bold;'>Compare</span><br>
-
-                       After having selected the option 'Compare' one can choose to compare either scale conversion methods or speaker normalization methods.
-                       When comparing the scale conversion methods, the unnormalized formant measurements are used.
-                       When comparing the speaker normalization methods, the raw Hz formant measurements are used.
-
-                       <br><br>
-
-                       For more details about the implementation of the methods that are used in this tab type <span style='font-family: monospace; font-size: 90%;'>vignette('visvow')</span> in the R console and read section 6.
-
-                       <br><br>
-
-                       <span style='font-weight: bold;'>References</span><br>
-
-                       Fabricius, A., Watt, D., & Johnson, D. E. (2009). A comparison of three speaker-intrinsic vowel formant frequency normalization algorithms for sociophonetics. <i>Language Variation and Change</i>, 21(3), 413-435.
-                       <br>                   
-                       Adank, P., Smits, R., & Van Hout, R. (2004). A comparison of vowel normalization procedures for language variation research. <i>The Journal of the Acoustical Society of America</i>, 116(5), 3099-3107.
-                       <br>
-
-                       </span>")),
-
-          footer = modalButton("OK")
-        ))
-      })
-
-      output$selTimes5 <- renderUI(
-      {
-        if (is.null(vowelTab()))
-          return(NULL)
-
-        timeCode     <- getTimeCode()
-        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
-        nColumns     <- ncol(vowelTab())
-        nPoints      <- (nColumns - (indexVowel + 1))/5
-
-        checkboxGroupInput('replyTimes5', 'Time points to be included:', timeCode, selected = Round(nPoints/2), TRUE)
-      })
-
-      output$selTimesN5 <- renderUI(
-      {
-        if (is.null(vowelTab()))
-          return(NULL)
-
-        timeCode     <- getTimeCode()
-        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
-        nColumns     <- ncol(vowelTab())
-        nPoints      <- (nColumns - (indexVowel + 1))/5
-
-        checkboxGroupInput('replyTimesN5', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
-      })
-
-      output$selVars51 <- renderUI(
-      {
-        if (is.null(vowelTab()))
-          return(NULL)
-
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-
-        if (indexVowel > 2)
-          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
-        else
-          options <- NULL
-
-        selectInput('replyVars51', 'Anatomic var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
-      })
-
-      output$selVars52 <- renderUI(
-      {
-        if (is.null(vowelTab()))
-          return(NULL)
-
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-
-        if (indexVowel > 2)
-          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
-        else
-          options <- NULL
-
-        selectInput('replyVars52', 'Socioling. var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
-      })
-
-      emptyF3 <- reactive(
-      {
-        req(vowelTab())
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-        return(sum(vowelTab()[,indexVowel+6]==0)==nrow(vowelTab()))
-      })
-
-      output$selF35 <- renderUI(
-      {
-        if (!emptyF3())
-        {
-          tagList(
-            p(style='font-weight: bold;', "Include:"),
-            checkboxInput("replyF35", "F3", value = FALSE, width = NULL)
-          )
-        }
-      })
-
-      output$exclVow5 <- renderUI(
-      {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
-          return(NULL)
-
-        if (length(vowelExcl())>0)
-        {
-          vowels <- ""
-
-          for (i in 1:length(vowelExcl()))
-            vowels <- paste(vowels, vowelExcl()[i])
-
-          return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br>"))))
-        }
-        else
-          return(NULL)
-      })
-
-      output$getOpts5 <- renderUI(
-      {
-        req(input$selMeth5)
-
-        if (input$selMeth5=="Evaluate")
-        {
-          return(radioButtons(inputId  = 'selAuth5',
-                              label    = 'Author:',
-                              choices  = c("Adank et al. (2004)",
-                                           "Fabricius et al. (2009)"),
-                              selected =   "Fabricius et al. (2009)",
-                              inline   = FALSE))
-        }
-
-        if (input$selMeth5=="Compare")
-        {
-          return(radioButtons(inputId  = 'selConv5',
-                              label    = 'Conversion:',
-                              choices  = c("Scaling",
-                                           "Normalization"),
-                              selected =   "Scaling",
-                              inline   = FALSE))
-        }
-      })
-
-      output$getEval5 <- renderUI(
-      {
-        req(input$selAuth5)
-
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Adank et al. (2004)"))
-        {
-          return(radioButtons(inputId  = 'selEval52',
-                              label    = 'Method:',
-                              choices  = c("preserve phonemic variation",
-                                           "minimize anatomic variation",
-                                           "preserve sociolinguistic variation"),
-                              selected =   "preserve phonemic variation",
-                              inline   = FALSE))
-        }
-        
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
-        {
-          return(radioButtons(inputId  = 'selEval51',
-                              label    = 'Method:',
-                              choices  = c("equalize vowel space areas",
-                                           "improve vowel space overlap"),
-                              selected =   "equalize vowel space areas",
-                              inline   = FALSE))
-        }
-      })
-
-      output$goButton <- renderUI(
-      {
-        if (length(unique(vowelTab()$speaker)) > 1)
-          return(div(style="text-align: center;", actionButton('getEval', 'Go!')))
-        else
-          return(div(style="text-align: center;", p("You need multiple speakers for this function.")))
-      })
-      
-      vowelScale5 <- reactive(
-      {
-        return(vowelScale(vowelSame(), global$replyScale5, 50))
-      })
-
-      vowelNorm5 <- reactive(
-      {
-        indexVowel <- grep("^vowel$", colnames(vowelScale5()))
-        nColumns   <- ncol(vowelScale5())
-        nPoints    <- (nColumns - (indexVowel + 1))/5
-
-        if (!is.null(input$replyTimesN5))
-          replyTimesN <- input$replyTimesN5
-        else
-          return(NULL)
-
-        if (max(replyTimesN) > nPoints)
-          replyTimesN <- Round(nPoints/2)
-        else {}
-        
-        vL1 <- vowelLong1(vowelScale5(),replyTimesN)
-        vL2 <- vowelLong2(vL1)
-        vL3 <- vowelLong3(vL1)
-        vL4 <- vowelLong4(vL1)
-
-        return(vowelNormF(vowelScale5(), vL1, vL2, vL3, vL4, global$replyNormal5))
-      })
-
-      vowelSubS5 <- reactive(
-      {
-        if (is.null(vowelNorm5()) || (nrow(vowelNorm5())==0)  || (length(input$replyTimes5)==0))
-          return(NULL)
-
-        vT <- vowelNorm5()
-
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-        nPoints <- (ncol(vowelTab()) - (indexVowel + 1))/5
-
-        if ((nrow(vT)>0) && (max(as.numeric(input$replyTimes5))<=nPoints))
-        {
-          if ((!is.null(input$replyVars51)) && (length(input$replyVars51) > 0))
-          {
-            indices <- which(colnames(vT) %in% input$replyVars51)
-            vT$vars1 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
-          }
-          else
-            vT$vars1 <- "none"
-
-          if ((!is.null(input$replyVars52)) && (length(input$replyVars52) > 0))
-          {
-            indices <- which(colnames(vT) %in% input$replyVars52)
-            vT$vars2 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
-          }
-          else
-            vT$vars2 <- "none"
-
-          vT0 <- data.frame()
-
-          for (i in (1:length(input$replyTimes5)))
-          {
-            Code <- strtoi(input$replyTimes5[i])
-
-            indexF1 <- indexVowel + 4 + ((Code-1) * 5)
-            indexF2 <- indexVowel + 5 + ((Code-1) * 5)
-            indexF3 <- indexVowel + 6 + ((Code-1) * 5)
-
-            if (any(is.na(vT[,indexF1])))
-              vT[,indexF1] <- 0
-            if (any(is.na(vT[,indexF2])))
-              vT[,indexF2] <- 0
-            if (any(is.na(vT[,indexF3])))
-              vT[,indexF3] <- 0
-
-            vT0 <- rbind(vT0, data.frame(vowel   = vT$vowel    ,
-                                         speaker = vT$speaker  ,
-                                         time    = i           ,
-                                         vars1   = vT$vars1    ,
-                                         vars2   = vT$vars2    ,
-                                         F1      = vT[,indexF1],
-                                         F2      = vT[,indexF2],
-                                         F3      = vT[,indexF3]))
-          }
-
-          return(aggregate(cbind(F1,F2,F3)~vowel+speaker+time+vars1+vars2, data=vT0, FUN=mean))
-        }
-        else
-          return(data.frame())
-      })
-
-      asPolySet <- function(df, PID)
-      {
-        df$PID <- PID
-        df$POS <- 1:nrow(df)
-        return(df)
-      }
-
-      perc <- function(yp)
-      {
-        eql <- nrow(subset(yp, yp[,1]==yp[,2]))
-        all <- nrow(yp)
-
-        return((eql/all)*100)
-      }
-
-      round2 <- function(x, n=0)
-      {
-        scale<-10^n
-        return(trunc(x*scale+sign(x)*0.5)/scale)
-      }
-
-      evalResults <- eventReactive(input$getEval,
-      {
-        req(vowelTab())
-
-        Scale  <- unlist(optionsScale())
-        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
-
-        allScalesAllowed <- c("",
-                              " Peterson",
-                              " Syrdal & Gopal",
-                              " Thomas & Kendall",
-                              " Gerstman",
-                              " Lobanov",
-                              " Watt & Fabricius",
-                              " Fabricius et al.",
-                              " Bigham",
-                              " Heeringa & Van de Velde I" ,
-                              " Heeringa & Van de Velde II",
-                              " Nearey I")
-
-        matrix1  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix2  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix3  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix4  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix5  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-
-         loop <- 0
-        nLoop <- (length(Scale)-1) * length(Normal)
-
-        withProgress(value = 0, style = "old",
-        {
-          for (i in 1:(length(Scale)-1))
-          {
-            global$replyScale5 <- Scale[i]
-
-            for (j in 1:length(Normal))
-            {
-              loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
-
-              if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
-              {
-                global$replyNormal5 <- Normal[j]
-
-                vT <- vowelSubS5()
-
-                # Adank et al. (2004)
-
-                if (emptyF3() || !input$replyF35)
-                  model <- lda(factor(vowel)~cbind(F1,F2    ), data=vT)
-                else
-                  model <- lda(factor(vowel)~cbind(F1,F2, F3), data=vT)
-
-                p <- predict(model)
-                yp <- cbind(as.character(vT$vowel), as.character(p$class))
-                matrix1[j,i] <- perc(yp)
-
-                ##
-
-                if (length(unique(vT$vars1)) > 1)
-                {
-                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
-
-                  vTsub <- subset(vT, (vowel==Segments$vowel[1]) & (time==Segments$time[1]))
-                  vars1 <- vTsub$vars1
-
-                  if (emptyF3() || !input$replyF35)
-                    Preds <- cbind(vTsub$F1, vTsub$F2)
-                  else
-                    Preds <- cbind(vTsub$F1, vTsub$F2, vTsub$F3)
-
-                  for (k in 2:nrow(Segments))
-                  {
-                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
-
-                    if (emptyF3() || !input$replyF35)
-                      Preds <- cbind(Preds, vTsub$F1, vTsub$F2)
-                    else
-                      Preds <- cbind(Preds, vTsub$F1, vTsub$F2, vTsub$F3)
-                  }
-
-                  model <- lda(x=Preds[, 1:ncol(Preds)], grouping=vars1)
-                  p <- predict(model)
-                  yp <- cbind(as.character(vT$vars1), as.character(p$class))
-                  matrix2[j,i] <- perc(yp)
-                }
-                else
-                  matrix2[j,i] <- NA
-
-                ##
-
-                if (length(unique(vT$vars2)) > 1)
-                {
-                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
-                  Perc <- c()
-
-                  for (k in 1:nrow(Segments))
-                  {
-                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
-
-                    if (emptyF3() || !input$replyF35)
-                      model <- lda(factor(vars2)~cbind(F1,F2   ), data=vTsub)
-                    else
-                      model <- lda(factor(vars2)~cbind(F1,F2,F3), data=vTsub)
-
-                    p <- predict(model)
-                    yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
-                    Perc <- c(Perc, perc(yp))
-                  }
-
-                  matrix3[j,i] <- mean(Perc)
-                }
-                else
-                  matrix3[j,i] <- NA
-
-                # Fabricius et al. (2009)
-
-                if (emptyF3() || !input$replyF35)
-                {
-                  fab1 <- rep(NA, length(input$replyTimes5))
-                  fab2 <- rep(NA, length(input$replyTimes5))
-              
-                  for (t in (1:length(input$replyTimes5)))
-                  {
-                    speakers <- unique(vT$speaker)
-              
-                    vTsub <- subset(vT, (speaker==speakers[1]) & (time==t))
-                    
-                    indices <- grDevices::chull(vTsub$F1, vTsub$F2)
-                    area <- abs(polyarea(vTsub$F1[indices], vTsub$F2[indices]))
-                  
-                    polySet <- asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), 1)
-                  
-                    for (k in 2:length(speakers))
-                    {
-                      vTsub <- subset(vT, (speaker==speakers[k]) & (time==t))
-                  
-                      indices <- grDevices::chull(vTsub$F1, vTsub$F2)
-                      area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
-                  
-                      polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
-                    }
-                  
-                    fab1[t] <- (sd(area)/mean(area))^2
-
-                    ##
-                  
-                    inter <- joinPolys(polySet, operation="INT"  )
-                    union <- joinPolys(polySet, operation="UNION")
-                  
-                    areaI <- abs(polyarea(inter$X, inter$Y))
-                    areaU <- abs(polyarea(union$X, union$Y))
-                  
-                    fab2[t] <- areaI / areaU
-                  }
-
-                  if ((i==1) & (j==1))
-                    fab10 <- fab1
-
-                  fab1 <- 1 - (fab1/fab10)
-
-                  matrix4[j,i] <- mean(fab1)
-                  matrix5[j,i] <- mean(fab2)
-                }
-                else
-                {
-                  matrix4[j,i] <- NA
-                  matrix5[j,i] <- NA
-                }
-              }
-            }
-          }
-        })
-
-        matrix1 <- round2(matrix1, n=3)
-        matrix2 <- round2(matrix2, n=3)
-        matrix3 <- round2(matrix3, n=3)
-        matrix4 <- round2(matrix4, n=3)
-        matrix5 <- round2(matrix5, n=3)
-
-        matrix1  <- as.data.frame(matrix1)
-        matrix2  <- as.data.frame(matrix2)
-        matrix3  <- as.data.frame(matrix3)
-        matrix4  <- as.data.frame(matrix4)
-        matrix5  <- as.data.frame(matrix5)
-
-        matrix1[is.na(matrix1)] <- "-"
-        matrix2[is.na(matrix2)] <- "-"
-        matrix3[is.na(matrix3)] <- "-"
-        matrix4[is.na(matrix4)] <- "-"
-        matrix5[is.na(matrix5)] <- "-"
-
-        colnames(matrix1) <- Scale[1:(length(Scale)-1)]
-        colnames(matrix2) <- Scale[1:(length(Scale)-1)]
-        colnames(matrix3) <- Scale[1:(length(Scale)-1)]
-        colnames(matrix4) <- Scale[1:(length(Scale)-1)]
-        colnames(matrix5) <- Scale[1:(length(Scale)-1)]
-
-        matrix1 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix1)
-        matrix2 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix2)
-        matrix3 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix3)
-        matrix4 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix4)
-        matrix5 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix5)
-
-        colnames(matrix1)[1] <- " "
-        colnames(matrix2)[1] <- " "
-        colnames(matrix3)[1] <- " "
-        colnames(matrix4)[1] <- " "
-        colnames(matrix5)[1] <- " "
-
-        return(list(matrix1, matrix2, matrix3, matrix4, matrix5))
-      })
-
-      showResults1 <- eventReactive(input$getEval,
-      {
-        req(vowelTab())
-
-        Scale  <- unlist(optionsScale())
-        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
-
-        matrix6  <- matrix(NA, nrow = (length(Scale)-1), ncol = (length(Scale)-1))
-
-        rownames(matrix6) <- Scale[1:(length(Scale)-1)]
-        colnames(matrix6) <- Scale[1:(length(Scale)-1)]
-
-         loop <- 0
-        nLoop <- ((length(Scale)-1) * ((length(Scale)-1)-1))/2
-
-        global$replyNormal5 <- ""
-
-        withProgress(value = 0, style = "old",
-        {
-          for (i in 2:(length(Scale)-1))
-          {
-            global$replyScale5  <- Scale[i]
-            vT1 <- vowelSubS5()
-
-            for (j in 1:(i-1))
-            {
-              loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
-
-              global$replyScale5  <- Scale[j]
-              vT2 <- vowelSubS5()
-
-              if (emptyF3() || !input$replyF35)
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
-              else
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
-
-              matrix6[i,j] <- Cor
-              matrix6[j,i] <- Cor
-            }
-          }
-        })
-
-        for (i in 1:(length(Scale)-1))
-        {
-          matrix6[i,i] <- 0
-        }
-
-        return(matrix6)
-      })
-
-      showResults2 <- eventReactive(input$getEval,
-      {
-        req(vowelTab())
-
-        Scale  <- unlist(optionsScale())
-        Normal <- unlist(optionsNormal(vowelTab(), " Hz", (emptyF3() || !input$replyF35)))
-
-        matrix6  <- matrix(NA, nrow = length(Normal), ncol = length(Normal))
-
-        rownames(matrix6) <- c(" None", Normal[2:length(Normal)])
-        colnames(matrix6) <- c(" None", Normal[2:length(Normal)])
-
-        global$replyScale5 <- " Hz"
-
-         loop <- 0
-        nLoop <- (length(Normal) * (length(Normal)-1))/2
-
-        withProgress(value = 0, style = "old",
-        {
-          for (i in 2:length(Normal))
-          {
-            global$replyNormal5 <- Normal[i]
-            vT1 <- vowelSubS5()
-
-            for (j in 1:(i-1))
-            {
-              loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
-
-              global$replyNormal5 <- Normal[j]
-              vT2 <- vowelSubS5()
-
-              if (emptyF3() || !input$replyF35)
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
-              else
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
-
-              matrix6[i,j] <- Cor
-              matrix6[j,i] <- Cor
-            }
-          }
-        })
-
-        for (i in 1:length(Normal))
-        {
-          matrix6[i,i] <- 0
-        }
-
-        return(matrix6)
-      })
-
-      output$table5 <- renderFormattable(
-      {
-        if (length(unique(vowelTab()$speaker)) < 2)
-          return(NULL)
-        
-        if (input$selAuth5=="Fabricius et al. (2009)")
-          req(input$selEval51)
-
-        if (input$selAuth5=="Adank et al. (2004)")
-          req(input$selEval52)
-
-        df <- data.frame()
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve phonemic variation"))
-        {
-          df <- evalResults()[[1]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "minimize anatomic variation"))
-        {
-          df <- evalResults()[[2]]
-          col1 <- "yellow"
-          col2 <- "turquoise"
-        }
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve sociolinguistic variation"))
-        {
-          df <- evalResults()[[3]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
-        {
-          df <- evalResults()[[4]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
-        {
-          df <- evalResults()[[5]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        formattable(df, align = rep("l", 11), 
-                    list(' ' = formatter("span", style = ~ style(display = "block", "font.weight" = "bold")),
-                         formattable::area() ~ color_tile(col1, col2)))
-      })
-
-      output$graph5 <- renderPlot(
-      {
-        req(input$selConv5)
-
-        if (input$selConv5=="Scaling")
-          clus <- hclust(as.dist(showResults1()), method="average")
-
-        if (input$selConv5=="Normalization")
-          clus <- hclust(as.dist(showResults2()), method="average")
-
-        dendro <- dendro_data(as.dendrogram(clus), type = "rectangle")
-        dendro$labels$label <- paste0("  ", dendro$labels$label)
-
-        rownames(dendro$labels) <- 1:nrow(dendro$labels)
-
-        gp <- ggplot(dendro$segments) +
-              geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) +
-              geom_text (data = dendro$labels, aes(x, y, label = label), hjust = 0, angle = 0, size = 4, family="Helvetica") +
-              scale_y_reverse(expand = c(0.5, 0)) +
-              coord_flip() +
-              ggtitle('') +
-              xlab(NULL) + ylab(NULL) +
-              theme_bw() +
-              theme(text            =element_text(size=22, family="Helvetica"),
-                    plot.title      =element_text(face="bold", hjust = 0.5),
-                    axis.text       =element_blank(),
-                    axis.ticks      =element_blank(),
-                    panel.grid.major=element_blank(),
-                    panel.grid.minor=element_blank()) +
-             guides(color = guide_legend(override.aes = list(linetype = 0, shape=3)))
-
-        print(gp)
-      })
-
-      output$Graph5 <- renderUI(
-      {
-        if (input$selMeth5=="Evaluate")
-        {
-          fluidPage(
-            style = "padding:0; margin:0; font-size: 90%",
-            formattableOutput("table5", height="513px")
-          )
-        }
-        else
-        {
-          fluidPage(
-            style = "padding:0; margin:0;",
-            plotOutput("graph5", height="513px")
-          )
-        }
-      })
-
-      ##########################################################################
-
       replyTimes10  <- reactive(input$replyTimes1)
       replyTimes1   <- debounce(replyTimes10 , 2000)
 
@@ -3670,20 +2931,13 @@ visvow <- function()
         selectInput('replyScale1', 'Scale:', optionsScale()[1:(length(optionsScale())-1)], selected = optionsScale()[1], selectize=FALSE, multiple=FALSE)
       })
 
-      onlyF1F2 <- function()
-      {
-        if ((input$axisX!="F3") & (input$axisY!="F3") & (input$axisZ!="F3"))
-          return(TRUE )
-        else
-          return(FALSE)
-      }
-
       output$selNormal1 <- renderUI(
       {
         if (is.null(vowelTab()) || length(input$replyScale1)==0)
           return(NULL)
 
-        selectInput('replyNormal1', 'Normalization:', optionsNormal(vowelTab(), input$replyScale1, onlyF1F2()), selected = optionsNormal(vowelTab(), input$replyScale1, onlyF1F2())[1], selectize=FALSE, multiple=FALSE)
+        onlyF1F2 <- ((input$axisX!="F3") & (input$axisY!="F3") & (input$axisZ!="F3"))
+        selectInput('replyNormal1', 'Normalization:', optionsNormal(vowelTab(), input$replyScale1, TRUE, onlyF1F2), selected = optionsNormal(vowelTab(), input$replyScale1, TRUE, onlyF1F2)[1], selectize=FALSE, multiple=FALSE)
       })
 
       output$selTimesN <- renderUI(
@@ -6694,7 +5948,8 @@ visvow <- function()
         if (is.null(vowelTab()) || length(input$replyScale3)==0)
           return(NULL)
 
-        selectInput('replyNormal3', 'Normalization:', optionsNormal(vowelTab(), input$replyScale3, onlyF1F2()), selected = optionsNormal(vowelTab(), input$replyScale3, onlyF1F2())[1], selectize=FALSE, multiple=FALSE)
+        onlyF1F2 <- !is.element("F3", input$selFormant3)
+        selectInput('replyNormal3', 'Normalization:', optionsNormal(vowelTab(), input$replyScale3, TRUE, onlyF1F2), selected = optionsNormal(vowelTab(), input$replyScale3, TRUE, onlyF1F2)[1], selectize=FALSE, multiple=FALSE)
       })
 
       output$selTimesN3 <- renderUI(
@@ -7130,6 +6385,788 @@ visvow <- function()
         grDevices::graphics.off()
         
         remove_modal_spinner()
+      })
+      
+      ##########################################################################
+      
+      global <- reactiveValues(replyScale5=NULL, replyNormal5=NULL)
+
+      observeEvent(input$buttonHelp5, {
+        showModal(modalDialog(easyClose = TRUE, fade = FALSE,
+          title =
+          HTML(paste0("<span style='font-weight: bold; font-size: 17px;'>Evaluation of scale conversion and speaker normalization methods</span>")),
+
+          HTML(paste0("<span style='font-size: 15px;'>
+
+                       This tab is meant to be used in order to find the most suitable combination of a scale conversion method and a speaker normalization method for your data set.
+                       Choose the settings and press the Go! button. Be prepared that running the evaluation procedures <b>may take some time</b>, depending on the size of your data set.
+
+                       <br><br>
+
+                       In case the speakers have pronounced different sets of vowels, the procedures are run on the basis of the set of vowels that are found across all speakers.
+                       The vowels thus excluded are printed.
+
+                       <br><br>
+
+                       <span style='font-weight: bold;'>Evaluate</span><br>
+
+                       The results are presented as a table where the columns represent the scale conversion methods and the rows the normalization procedures.
+                       Each score is shown on a background with a color somewhere in between turquoise and yellow.
+                       The more yellow the background is, the better the result.
+                       Note that for some tests larger scores represent better results, and for other tests smaller scores represent better results.
+
+                       <br><br>
+
+                       <span style='font-weight: bold;'>Compare</span><br>
+
+                       After having selected the option 'Compare' one can choose to compare either scale conversion methods or speaker normalization methods.
+                       When comparing the scale conversion methods, the unnormalized formant measurements are used.
+                       When comparing the speaker normalization methods, the raw Hz formant measurements are used.
+
+                       <br><br>
+
+                       For more details about the implementation of the methods that are used in this tab type <span style='font-family: monospace; font-size: 90%;'>vignette('visvow')</span> in the R console and read section 6.
+
+                       <br><br>
+
+                       <span style='font-weight: bold;'>References</span><br>
+
+                       Fabricius, A., Watt, D., & Johnson, D. E. (2009). A comparison of three speaker-intrinsic vowel formant frequency normalization algorithms for sociophonetics. <i>Language Variation and Change</i>, 21(3), 413-435.
+                       <br>                   
+                       Adank, P., Smits, R., & Van Hout, R. (2004). A comparison of vowel normalization procedures for language variation research. <i>The Journal of the Acoustical Society of America</i>, 116(5), 3099-3107.
+                       <br>
+
+                       </span>")),
+
+          footer = modalButton("OK")
+        ))
+      })
+
+      output$selTimes5 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        timeCode     <- getTimeCode()
+        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
+        nColumns     <- ncol(vowelTab())
+        nPoints      <- (nColumns - (indexVowel + 1))/5
+
+        checkboxGroupInput('replyTimes5', 'Time points to be included:', timeCode, selected = Round(nPoints/2), TRUE)
+      })
+
+      output$selTimesN5 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        timeCode     <- getTimeCode()
+        indexVowel   <- grep("^vowel$", colnames(vowelTab()))
+        nColumns     <- ncol(vowelTab())
+        nPoints      <- (nColumns - (indexVowel + 1))/5
+
+        checkboxGroupInput('replyTimesN5', 'Normalization based on:', timeCode, selected = Round(nPoints/2), TRUE)
+      })
+
+      output$selVars51 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+
+        if (indexVowel > 2)
+          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
+        else
+          options <- NULL
+
+        selectInput('replyVars51', 'Anatomic var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
+      })
+
+      output$selVars52 <- renderUI(
+      {
+        if (is.null(vowelTab()))
+          return(NULL)
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+
+        if (indexVowel > 2)
+          options <- c(colnames(vowelTab()[2:(indexVowel-1)]))
+        else
+          options <- NULL
+
+        selectInput('replyVars52', 'Socioling. var(s):', options, selected=character(0), multiple=TRUE, selectize=FALSE, size=5, width="100%")
+      })
+
+      emptyF0 <- reactive(
+      {
+        req(vowelTab())
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+        return(sum(vowelTab()[,indexVowel+3]==0)==nrow(vowelTab()))
+      })
+      
+      emptyF3 <- reactive(
+      {
+        req(vowelTab())
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+        return(sum(vowelTab()[,indexVowel+6]==0)==nrow(vowelTab()))
+      })
+      
+      output$selF035 <- renderUI(
+      {
+        if (!emptyF0() | !emptyF3())
+        {
+          tL <- tagList(tags$b("Include:"))
+            
+          if (!emptyF0() & !emptyF3())
+            return(tagList(tL, splitLayout(cellWidths = 38, 
+                                           checkboxInput("replyF05", "f0", value = FALSE, width = NULL),
+                                           checkboxInput("replyF35", "F3", value = FALSE, width = NULL))))
+          else 
+              
+          if (!emptyF0())
+            return(tagList(tL, splitLayout(cellWidths = 38, 
+                                           checkboxInput("replyF05", "f0", value = FALSE, width = NULL))))
+          else
+              
+          if (!emptyF3())
+            return(tagList(tL, splitLayout(cellWidths = 38, 
+                                             checkboxInput("replyF35", "F3", value = FALSE, width = NULL))))
+          else
+            return(NULL)
+        }
+      })
+
+      output$exclVow5 <- renderUI(
+      {
+        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
+          return(NULL)
+
+        if (length(vowelExcl())>0)
+        {
+          vowels <- ""
+
+          for (i in 1:length(vowelExcl()))
+            vowels <- paste(vowels, vowelExcl()[i])
+
+          return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br>"))))
+        }
+        else
+          return(NULL)
+      })
+
+      output$getOpts5 <- renderUI(
+      {
+        req(input$selMeth5)
+
+        if (input$selMeth5=="Evaluate")
+        {
+          return(radioButtons(inputId  = 'selAuth5',
+                              label    = 'Author:',
+                              choices  = c("Adank et al. (2004)",
+                                           "Fabricius et al. (2009)"),
+                              selected =   "Fabricius et al. (2009)",
+                              inline   = FALSE))
+        }
+
+        if (input$selMeth5=="Compare")
+        {
+          return(radioButtons(inputId  = 'selConv5',
+                              label    = 'Conversion:',
+                              choices  = c("Scaling",
+                                           "Normalization"),
+                              selected =   "Scaling",
+                              inline   = FALSE))
+        }
+      })
+
+      output$getEval5 <- renderUI(
+      {
+        req(input$selAuth5)
+
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Adank et al. (2004)"))
+        {
+          return(radioButtons(inputId  = 'selEval52',
+                              label    = 'Method:',
+                              choices  = c("preserve phonemic variation",
+                                           "minimize anatomic variation",
+                                           "preserve sociolinguistic variation"),
+                              selected =   "preserve phonemic variation",
+                              inline   = FALSE))
+        }
+        
+        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
+        {
+          return(radioButtons(inputId  = 'selEval51',
+                              label    = 'Method:',
+                              choices  = c("equalize vowel space areas",
+                                           "improve vowel space overlap"),
+                              selected =   "equalize vowel space areas",
+                              inline   = FALSE))
+        }
+      })
+
+      output$goButton <- renderUI(
+      {
+        if (length(unique(vowelTab()$speaker)) > 1)
+          return(div(style="text-align: center;", actionButton('getEval', 'Go!')))
+        else
+          return(div(style="text-align: center;", p("You need multiple speakers for this function.")))
+      })
+      
+      vowelScale5 <- reactive(
+      {
+        return(vowelScale(vowelSame(), global$replyScale5, 50))
+      })
+
+      vowelNorm5 <- reactive(
+      {
+        indexVowel <- grep("^vowel$", colnames(vowelScale5()))
+        nColumns   <- ncol(vowelScale5())
+        nPoints    <- (nColumns - (indexVowel + 1))/5
+
+        if (!is.null(input$replyTimesN5))
+          replyTimesN <- input$replyTimesN5
+        else
+          return(NULL)
+
+        if (max(replyTimesN) > nPoints)
+          replyTimesN <- Round(nPoints/2)
+        else {}
+        
+        vL1 <- vowelLong1(vowelScale5(),replyTimesN)
+        vL2 <- vowelLong2(vL1)
+        vL3 <- vowelLong3(vL1)
+        vL4 <- vowelLong4(vL1)
+
+        return(vowelNormF(vowelScale5(), vL1, vL2, vL3, vL4, global$replyNormal5))
+      })
+
+      vowelSubS5 <- reactive(
+      {
+        if (is.null(vowelNorm5()) || (nrow(vowelNorm5())==0)  || (length(input$replyTimes5)==0))
+          return(NULL)
+
+        vT <- vowelNorm5()
+
+        indexVowel <- grep("^vowel$", colnames(vowelTab()))
+        nPoints <- (ncol(vowelTab()) - (indexVowel + 1))/5
+
+        if ((nrow(vT)>0) && (max(as.numeric(input$replyTimes5))<=nPoints))
+        {
+          if ((!is.null(input$replyVars51)) && (length(input$replyVars51) > 0))
+          {
+            indices <- which(colnames(vT) %in% input$replyVars51)
+            vT$vars1 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
+          }
+          else
+            vT$vars1 <- "none"
+
+          if ((!is.null(input$replyVars52)) && (length(input$replyVars52) > 0))
+          {
+            indices <- which(colnames(vT) %in% input$replyVars52)
+            vT$vars2 <- unite(data=vT[,1:(indexVowel-1)], col="all", indices, sep = "_", remove = FALSE)$all
+          }
+          else
+            vT$vars2 <- "none"
+
+          vT0 <- data.frame()
+
+          for (i in (1:length(input$replyTimes5)))
+          {
+            Code <- strtoi(input$replyTimes5[i])
+
+            indexF0 <- indexVowel + 3 + ((Code-1) * 5)
+            indexF1 <- indexVowel + 4 + ((Code-1) * 5)
+            indexF2 <- indexVowel + 5 + ((Code-1) * 5)
+            indexF3 <- indexVowel + 6 + ((Code-1) * 5)
+
+            if (any(is.na(vT[,indexF0])))
+              vT[,indexF0] <- 0
+            if (any(is.na(vT[,indexF1])))
+              vT[,indexF1] <- 0
+            if (any(is.na(vT[,indexF2])))
+              vT[,indexF2] <- 0
+            if (any(is.na(vT[,indexF3])))
+              vT[,indexF3] <- 0
+
+            vT0 <- rbind(vT0, data.frame(vowel   = vT$vowel    ,
+                                         speaker = vT$speaker  ,
+                                         time    = i           ,
+                                         vars1   = vT$vars1    ,
+                                         vars2   = vT$vars2    ,
+                                         f0      = vT[,indexF0],
+                                         F1      = vT[,indexF1],
+                                         F2      = vT[,indexF2],
+                                         F3      = vT[,indexF3]))
+          }
+
+          return(aggregate(cbind(f0,F1,F2,F3)~vowel+speaker+time+vars1+vars2, data=vT0, FUN=mean))
+        }
+        else
+          return(data.frame())
+      })
+
+      asPolySet <- function(df, PID)
+      {
+        df$PID <- PID
+        df$POS <- 1:nrow(df)
+        return(df)
+      }
+
+      perc <- function(yp)
+      {
+        eql <- nrow(subset(yp, yp[,1]==yp[,2]))
+        all <- nrow(yp)
+
+        return((eql/all)*100)
+      }
+
+      round2 <- function(x, n=0)
+      {
+        scale<-10^n
+        return(trunc(x*scale+sign(x)*0.5)/scale)
+      }
+
+      evalResults <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
+
+        allScalesAllowed <- c("",
+                              " Peterson",
+                              " Syrdal & Gopal",
+                              " Thomas & Kendall",
+                              " Gerstman",
+                              " Lobanov",
+                              " Watt & Fabricius",
+                              " Fabricius et al.",
+                              " Bigham",
+                              " Heeringa & Van de Velde I" ,
+                              " Heeringa & Van de Velde II")
+
+        matrix1  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix2  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix3  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix4  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix5  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+
+         loop <- 0
+        nLoop <- (length(Scale)-1) * length(Normal)
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 1:(length(Scale)-1))
+          {
+            global$replyScale5 <- Scale[i]
+
+            for (j in 1:length(Normal))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
+              {
+                global$replyNormal5 <- Normal[j]
+                
+                vT <- vowelSubS5(); if (is.null(vT)) next()
+                
+                # Adank et al. (2004)
+                
+                preds <- c()
+                
+                if (!emptyF0() && input$replyF05 && 
+                    (sd(vT$f0) > 0.000001))
+                  preds <- cbind(preds, vT$f0)
+                
+                if (sd(vT$F1) > 0.000001) 
+                  preds <- cbind(preds, vT$F1)
+                
+                if (sd(vT$F2) > 0.000001) 
+                  preds <- cbind(preds, vT$F2)
+                
+                if (!emptyF3() && input$replyF35 &&
+                    (sd(vT$F3) > 0.000001))
+                  preds <- cbind(preds, vT$F3)
+                
+                model <- lda(factor(vT$vowel)~preds)
+                p <- predict(model)
+                yp <- cbind(as.character(vT$vowel), as.character(p$class))
+                matrix1[j,i] <- perc(yp)
+                
+                ##
+                
+                if (length(unique(vT$vars1)) > 1)
+                {
+                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
+                  
+                  preds <- c()
+                  
+                  for (k in 1:nrow(Segments))
+                  {
+                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
+                    
+                    if (!emptyF0() && input$replyF05 && 
+                        (sd(vTsub$f0) > 0.000001))
+                      preds <- cbind(preds, vTsub$f0)
+                    
+                    if (sd(vTsub$F1) > 0.000001) 
+                      preds <- cbind(preds, vTsub$F1)
+                    
+                    if (sd(vTsub$F2) > 0.000001) 
+                      preds <- cbind(preds, vTsub$F2)
+                    
+                    if (!emptyF3() && input$replyF35 &&
+                        (sd(vTsub$F3) > 0.000001))
+                      preds <- cbind(preds, vTsub$F3)
+                  }
+                  
+                  model <- lda(x=preds[, 1:ncol(preds)], grouping=vTsub$vars1)
+                  p <- predict(model)
+                  yp <- cbind(as.character(vT$vars1), as.character(p$class))
+                  matrix2[j,i] <- perc(yp)
+                }
+                else
+                  matrix2[j,i] <- NA
+                
+                ##
+                
+                if (length(unique(vT$vars2)) > 1)
+                {
+                  Segments <- unique(data.frame(vowel=vT$vowel, time=vT$time))
+                  
+                  Perc <- c()
+                  
+                  for (k in 1:nrow(Segments))
+                  {
+                    vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
+                    
+                    preds <- c()
+                    
+                    if (!emptyF0() && input$replyF05 && 
+                        (sd(vTsub$f0) > 0.000001))
+                      preds <- cbind(preds, vTsub$f0)
+                    
+                    if (sd(vTsub$F1) > 0.000001) 
+                      preds <- cbind(preds, vTsub$F1)
+                    
+                    if (sd(vTsub$F2) > 0.000001) 
+                      preds <- cbind(preds, vTsub$F2)
+                    
+                    if (!emptyF3() && input$replyF35 &&
+                        (sd(vTsub$F3) > 0.000001))
+                      preds <- cbind(preds, vTsub$F3)
+                    
+                    model <- lda(factor(vTsub$vars2)~preds)
+                    p <- predict(model)
+                    yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
+                    Perc <- c(Perc, perc(yp))
+                  }
+                  
+                  matrix3[j,i] <- mean(Perc)
+                }
+                else
+                  matrix3[j,i] <- NA
+    
+                # Fabricius et al. (2009)
+
+                if (!input$replyF05 & !input$replyF35)
+                {
+                  fab1 <- rep(NA, length(input$replyTimes5))
+                  fab2 <- rep(NA, length(input$replyTimes5))
+              
+                  for (t in (1:length(input$replyTimes5)))
+                  {
+                    speakers <- unique(vT$speaker)
+              
+                    area <- c()
+                    polySet <- data.frame()
+
+                    for (k in 1:length(speakers))
+                    {
+                      vTsub <- subset(vT, (speaker==speakers[k]) & (time==t))
+                  
+                      indices <- grDevices::chull(vTsub$F1, vTsub$F2)
+                      area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
+                  
+                      polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
+                    }
+                  
+                    fab1[t] <- (sd(area)/mean(area))^2
+
+                    ##
+                  
+                    inter <- joinPolys(polySet, operation="INT"  )
+                    union <- joinPolys(polySet, operation="UNION")
+                  
+                    areaI <- abs(polyarea(inter$X, inter$Y))
+                    areaU <- abs(polyarea(union$X, union$Y))
+                  
+                    fab2[t] <- areaI / areaU
+                  }
+
+                  if ((i==1) & (j==1))
+                    fab10 <- fab1
+
+                  fab1 <- 1 - (fab1/fab10)
+
+                  matrix4[j,i] <- mean(fab1)
+                  matrix5[j,i] <- mean(fab2)
+                }
+                else
+                {
+                  matrix4[j,i] <- NA
+                  matrix5[j,i] <- NA
+                }
+              }
+            }
+          }
+        })
+
+        matrix1 <- round2(matrix1, n=3)
+        matrix2 <- round2(matrix2, n=3)
+        matrix3 <- round2(matrix3, n=3)
+        matrix4 <- round2(matrix4, n=3)
+        matrix5 <- round2(matrix5, n=3)
+
+        matrix1  <- as.data.frame(matrix1)
+        matrix2  <- as.data.frame(matrix2)
+        matrix3  <- as.data.frame(matrix3)
+        matrix4  <- as.data.frame(matrix4)
+        matrix5  <- as.data.frame(matrix5)
+
+        matrix1[is.na(matrix1)] <- "-"
+        matrix2[is.na(matrix2)] <- "-"
+        matrix3[is.na(matrix3)] <- "-"
+        matrix4[is.na(matrix4)] <- "-"
+        matrix5[is.na(matrix5)] <- "-"
+
+        colnames(matrix1) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix2) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix3) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix4) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix5) <- Scale[1:(length(Scale)-1)]
+
+        matrix1 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix1)
+        matrix2 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix2)
+        matrix3 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix3)
+        matrix4 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix4)
+        matrix5 <- cbind(c("None", as.character(Normal[2:length(Normal)])), matrix5)
+
+        colnames(matrix1)[1] <- " "
+        colnames(matrix2)[1] <- " "
+        colnames(matrix3)[1] <- " "
+        colnames(matrix4)[1] <- " "
+        colnames(matrix5)[1] <- " "
+
+        return(list(matrix1, matrix2, matrix3, matrix4, matrix5))
+      })
+
+      showResults1 <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
+
+        matrix6  <- matrix(NA, nrow = (length(Scale)-1), ncol = (length(Scale)-1))
+
+        rownames(matrix6) <- Scale[1:(length(Scale)-1)]
+        colnames(matrix6) <- Scale[1:(length(Scale)-1)]
+
+         loop <- 0
+        nLoop <- ((length(Scale)-1) * ((length(Scale)-1)-1))/2
+
+        global$replyNormal5 <- ""
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 2:(length(Scale)-1))
+          {
+            global$replyScale5  <- Scale[i]
+            vT1 <- vowelSubS5()
+
+            for (j in 1:(i-1))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              global$replyScale5  <- Scale[j]
+              vT2 <- vowelSubS5()
+
+              if (emptyF3() || !input$replyF35)
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+              else
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+
+              matrix6[i,j] <- Cor
+              matrix6[j,i] <- Cor
+            }
+          }
+        })
+
+        for (i in 1:(length(Scale)-1))
+        {
+          matrix6[i,i] <- 0
+        }
+
+        return(matrix6)
+      })
+
+      showResults2 <- eventReactive(input$getEval,
+      {
+        req(vowelTab())
+
+        Scale  <- unlist(optionsScale())
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
+
+        matrix6  <- matrix(NA, nrow = length(Normal), ncol = length(Normal))
+
+        rownames(matrix6) <- c(" None", Normal[2:length(Normal)])
+        colnames(matrix6) <- c(" None", Normal[2:length(Normal)])
+
+        global$replyScale5 <- " Hz"
+
+         loop <- 0
+        nLoop <- (length(Normal) * (length(Normal)-1))/2
+
+        withProgress(value = 0, style = "old",
+        {
+          for (i in 2:length(Normal))
+          {
+            global$replyNormal5 <- Normal[i]
+            vT1 <- vowelSubS5()
+
+            for (j in 1:(i-1))
+            {
+              loop <- loop + 1
+              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+
+              global$replyNormal5 <- Normal[j]
+              vT2 <- vowelSubS5()
+
+              if (emptyF3() || !input$replyF35)
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+              else
+                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+
+              matrix6[i,j] <- Cor
+              matrix6[j,i] <- Cor
+            }
+          }
+        })
+
+        for (i in 1:length(Normal))
+        {
+          matrix6[i,i] <- 0
+        }
+
+        return(matrix6)
+      })
+
+      output$table5 <- renderFormattable(
+      {
+        if (length(unique(vowelTab()$speaker)) < 2)
+          return(NULL)
+        
+        if (input$selAuth5=="Fabricius et al. (2009)")
+          req(input$selEval51)
+
+        if (input$selAuth5=="Adank et al. (2004)")
+          req(input$selEval52)
+
+        df <- data.frame()
+
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve phonemic variation"))
+        {
+          df <- evalResults()[[1]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "minimize anatomic variation"))
+        {
+          df <- evalResults()[[2]]
+          col1 <- "yellow"
+          col2 <- "turquoise"
+        }
+
+        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve sociolinguistic variation"))
+        {
+          df <- evalResults()[[3]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
+        {
+          df <- evalResults()[[4]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+
+        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
+        {
+          df <- evalResults()[[5]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+
+        formattable(df, align = rep("l", 11), list(formattable::area() ~ color_tile(col1, col2)))
+      })
+
+      output$graph5 <- renderPlot(
+      {
+        req(input$selConv5)
+
+        if (input$selConv5=="Scaling")
+          clus <- hclust(as.dist(showResults1()), method="average")
+
+        if (input$selConv5=="Normalization")
+          clus <- hclust(as.dist(showResults2()), method="average")
+
+        dendro <- dendro_data(as.dendrogram(clus), type = "rectangle")
+        dendro$labels$label <- paste0("  ", dendro$labels$label)
+
+        rownames(dendro$labels) <- 1:nrow(dendro$labels)
+
+        gp <- ggplot(dendro$segments) +
+              geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) +
+              geom_text (data = dendro$labels, aes(x, y, label = label), hjust = 0, angle = 0, size = 4, family="Helvetica") +
+              scale_y_reverse(expand = c(0.5, 0)) +
+              coord_flip() +
+              ggtitle('') +
+              xlab(NULL) + ylab(NULL) +
+              theme_bw() +
+              theme(text            =element_text(size=22, family="Helvetica"),
+                    plot.title      =element_text(face="bold", hjust = 0.5),
+                    axis.text       =element_blank(),
+                    axis.ticks      =element_blank(),
+                    panel.grid.major=element_blank(),
+                    panel.grid.minor=element_blank()) +
+             guides(color = guide_legend(override.aes = list(linetype = 0, shape=3)))
+
+        print(gp)
+      })
+
+      output$Graph5 <- renderUI(
+      {
+        if (input$selMeth5=="Evaluate")
+        {
+          fluidPage(
+            style = "padding:0; margin:0; font-size: 90%",
+            formattableOutput("table5", height="513px")
+          )
+        }
+        else
+        {
+          fluidPage(
+            style = "padding:0; margin:0;",
+            plotOutput("graph5", height="513px")
+          )
+        }
       })
     }
   )

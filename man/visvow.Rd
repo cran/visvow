@@ -38,5 +38,5 @@ if (interactive()){
 }
 \seealso{
 The Help tab in the app provides more information about the format of the input file.
-Details about conversion and normalization procedures and some specific metrics are found in the vignette.
+Details about scale conversion and speaker normalization procedures and some specific metrics are found in the vignette.
 }
