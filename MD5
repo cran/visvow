@@ -1,7 +1,7 @@
-c46da3bbf4b382674fdffe3790c5f68f *DESCRIPTION
+48e9d90303b3a79337e4847715bfd2d8 *DESCRIPTION
 b6dde119479c3389c2a072e00fae5581 *NAMESPACE
-3ddea5822372cc67b20fc9701a071e42 *R/visvow.R
-d552e2be8935789465e2320f127920f9 *build/partial.rdb
+0d304e48540923cbbac9b8e6a55b0623 *R/visvow.R
+67dabc9a2350d018aaeb6d56a6b61b6e *build/partial.rdb
 dc08625bf15ac3c6e00e77a185b9aaa8 *build/vignette.rds
 6e8ac29945864c583055337b6ddb808f *inst/CITATION
 bf0dd08212aa82a63cd21424000ca18e *inst/FA1.jpg
@@ -37,7 +37,7 @@ d6b62faa1c449a83a0fb0ff9d3fc9571 *tests/testthat/data/MillerF.csv
 a43b6d50c3e723495a9a200f09138eec *tests/testthat/data/Nearey_IIF.csv
 3cdff5c8ce452b311d8ec5a856f07bed *tests/testthat/data/PetersonF.csv
 3c9cdb3c87da35870243072549bc397c *tests/testthat/data/ST.csv
-e8b1adfa52e0017da00e3d578fec4564 *tests/testthat/data/SussmanF.csv
+63d700e39feb0c2ec01c3ea658ca121f *tests/testthat/data/SussmanF.csv
 6bf3ff03e7a24428ae580a604bf41302 *tests/testthat/data/Syrdal_GopalF.csv
 dac20593c5200efed763541eb501fc85 *tests/testthat/data/Thomas_KendallF.csv
 9eab48586f0ee9e03ea90115cbb6b491 *tests/testthat/data/Watt_FabriciusF.csv

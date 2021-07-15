@@ -275,7 +275,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
     {
       indexTime <- indexVowel + 2 + ((i-1)*5)
 
-      F123 <- psych::geometric.mean(c(vT[,indexTime+2],vT[,indexTime+3],vT[,indexTime+4]))
+      F123 <- apply(vT[, indexTime+2:4], 1, psych::geometric.mean)
 
       vT[,indexTime+2] <- log(vT[,indexTime+2]/F123)
       vT[,indexTime+3] <- log(vT[,indexTime+3]/F123)
@@ -948,7 +948,7 @@ visvow <- function()
 {
   options(shiny.sanitize.errors = TRUE)
   options(shiny.usecairo=FALSE)
-  options(shiny.maxRequestSize=20*1024^2)
+  options(shiny.maxRequestSize=200*1024^2)
 
   addResourcePath('www', system.file(package='visvow'))
 
