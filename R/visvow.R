@@ -996,7 +996,7 @@ visvow <- function()
 
             fluidPage
             (
-              fileInput('vowelFile', 'Choose xlsx file',accept = c(".xlsx"), width="40%"),
+              fileInput('vowelFile', 'Upload xlsx file',accept = c(".xlsx"), width="40%"),
               uiOutput('checkFormat')
             ),
 
@@ -1488,26 +1488,38 @@ visvow <- function()
 
             br(),
             h5(strong("About")),
-            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The program has been developed at the Fryske Akademy (Leeuwarden, The Netherlands) by Wilbert Heeringa under supervision of Hans Van de Velde. Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'www/email.png', height = 20, align = "center"),"."),
+            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The following people were involved in the development of Visible Vowels: Wilbert Heeringa (implementation), Hans Van de Velde (project manager), Vincent van Heuven (advice). Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'email.png', height = 20, align = "center"),"."),
             br(),
             h5(strong("System requirements")),
             p("Visible Vowels runs best on a computer with a monitor with a minimum resolution of 1370 x 870 (width x height). The use of Mozilla Firefox as a web browser is to be preferred."),
             br(),
             h5(strong("Format")),
-            p("The input file should be a spreadsheet that is created in Excel or LibreOffice. It should be saved as an Excel 2007/2010/2013 XML file, i.e. with extension '.xlsx'. An example is schematically shown below."),
+            p("The input file should be a spreadsheet that is created in Excel or LibreOffice. It should be saved as an Excel 2007/2010/2013 XML file, i.e. with extension '.xlsx'. The spreadsheet should include the following variables (shown in red):"),
             br(),
-
+            
             tags$div(tags$ul
             (
-              tags$li(tags$span(HTML("<span style='color:blue'>Speakers</span>"),p("The first column should contain the speaker labels. Choose 'speaker' as column name. In our example there are three speakers labeled as 'A', 'B' and 'C'. This column is obligatory."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Vowels</span>"),p("A column that contains the vowel labels should follow. For this column choose 'vowel' as column name. In our example each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. Although in this table each vowel occurs just one time per speaker, multiple pronunciations are possible. In case you want to use IPA characters (as in the example), enter them as Unicode characters. In order to find Unicode IPA characters, use the online IPA Chart Keyboard of Weston Ruter at http://westonruter.github.io/ipa-chart/keyboard/. This column is obligatory."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Categorical variables</span>"),p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Duration</span>"),p("A column which contains the durations of the vowels should follow, with 'duration' as column name. The measurements may be either in seconds or milliseconds. This column is obligatory, but may be empty."))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Spectral variabels</span>"),p("Finally, a set of five columns should follow: 'time', f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names may be used. In the example table below f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice. A set should always include all five columns, but the columns 'time', 'f0' and 'F3' may be empty.")))
+              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>General</span>"),div(tags$ul(
+                tags$li(tags$span(HTML("<span style='color:crimson'>speaker</span>") ,p("Contains the speaker labels. This column is obligatory."))),
+                tags$li(tags$span(HTML("<span style='color:crimson'>vowel</span>")   ,p("Contains the vowel labels. Multiple pronunciations of the same vowel per speaker are possible. In case you want to use IPA characters, enter them as Unicode characters. In order to find Unicode IPA characters, use the online", tags$a(href="http://westonruter.github.io/ipa-chart/keyboard/", "IPA Chart Keyboard", target="_blank"), "of Weston Ruter. This column is obligatory.")))
+              )))),
+                       
+              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>Sociolinguistic</span>"),div(tags$ul(
+                tags$li(tags$span(HTML("<span style='color:crimson'>...</span>")          ,p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'.")))
+              )))),
+                       
+              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>Vowel</span>"),div(tags$ul(
+                tags$li(tags$span(HTML("<span style='color:crimson'>duration</span>"),p("Durations of the vowels. The measurements may be either in seconds or milliseconds. This column is obligatory but may be kept empty."))),
+                tags$li(tags$span(HTML("<span style='color:crimson'>time f0 F1 F2 F3</span>"),p("A set of five columns should follow multiple times: 'time', 'f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names should be used. A set should always include all five columns, but the columns 'time', 'f0' and 'F3' may be kept empty.")))
+              ))))
             )),
 
             br(),
-
+            
+            p("An example is schematically shown below. In this example there are three speakers labeled as 'A', 'B' and 'C'. Each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. As vowel labels IPA characters are used. Although each vowel occurs just one time per speaker, multiple pronunciations are possible. f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice."),
+            
+            br(),
+            
             div(img(src = 'www/format.png', height=330), style="margin-left: 26px;"),
             br(), br(),
             h5(strong("Example input file")),
@@ -1559,7 +1571,6 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>Rtsne</span>"),p("Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation, URL: https://github.com/jkrijthe/Rtsne"),p("L.J.P. van der Maaten and G.E. Hinton (2008). Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605"),p("L.J.P. van der Maaten (2014). Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245"))),
               tags$li(tags$span(HTML("<span style='color:blue'>plyr</span>"),p("Hadley Wickham (2011). The Split-Apply-Combine Strategy for Data Analysis. Journal of Statistical Software, 40(1), 1-29. URL http://www.jstatsoft.org/v40/i01/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>grid</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>ggsave_autosize</span>"),p("Z. Lin (GovTech, Singapore) developed this function for autocropping faceted plots made by using ggplot2"))),
               tags$li(tags$span(HTML("<span style='color:blue'>svglite</span>"),p("Hadley Wickham, Lionel Henry, T Jake Luciani, Matthieu Decorde and Vaudor Lise (2016). svglite: An 'SVG' Graphics Device. R package version 1.2.0. https://CRAN.R-project.org/package=svglite"))),
               tags$li(tags$span(HTML("<span style='color:blue'>Cairo</span>"),p("Simon Urbanek and Jeffrey Horner (2015). Cairo: R graphics device using cairo graphics library for creating high-quality bitmap (PNG, JPEG, TIFF),  vector (PDF, SVG, PostScript) and display (X11 and Win32) output. R package version 1.5-9. https://CRAN.R-project.org/package=Cairo"))),
               tags$li(tags$span(HTML("<span style='color:blue'>tikzDevice</span>"),p("Charlie Sharpsteen and Cameron Bracken (2020). tikzDevice: R Graphics Output in LaTeX Format. R package version 0.12.3.1. https://CRAN.R-project.org/package=tikzDevice"))),
@@ -1639,7 +1650,7 @@ visvow <- function()
 
       vowelTab <- reactive(
       {
-        if (is.null(vowelFile()) || (Check()!="OK"))
+        if (is.null(vowelFile()) || (checkVars()!="OK"))
           return(NULL)
 
         vT <- vowelFile()
@@ -1698,72 +1709,65 @@ visvow <- function()
         return(vT)
       })
 
-      Check <- reactive(
+      checkVar <- function(varName, varIndex, checkEmpty)
+      {
+        indexVar <- grep(paste0("^", varName, "$"), tolower(colnames(vowelFile())))
+        
+        if (!is.element(tolower(varName), tolower(colnames(vowelFile()))))
+          Message <- paste0("Column '", varName, "' not found.")
+        else
+          
+        if ((varIndex!=0) && (tolower(colnames(vowelFile())[varIndex])!=tolower(varName)))
+          Message <- paste0("'", varName, "' found in the wrong column.")
+        else
+            
+        if (checkEmpty && (sum(is.na(vowelFile()[,indexVar]))==nrow(vowelFile())))
+          Message <- paste0("Column '", varName, "' is empty.")
+        else
+          Message <- "OK"          
+            
+        return(Message)
+      }
+      
+      checkVars <- reactive(
       {
         if (is.null(vowelFile()))
           return(NULL)
-
-        indexVowel <- grep("^duration$", tolower(colnames(vowelFile()))) - 1
-
-        if (length(grep("^speaker$", tolower(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'speaker' not found."
-        else
-
-        if (tolower(colnames(vowelFile())[1])!="speaker")
-          Message <- "Column 'speaker' should be first column."
-        else
-
-        if (sum(is.na(vowelFile()[,1]))==nrow(vowelFile()))
-          Message <- "Column 'speaker' is empty."
-        else
-
-        if (length(grep("^vowel$", tolower(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'vowel' not found."
-        else
-
-        if (tolower(colnames(vowelFile())[2])!="vowel")
-          Message <- "Column 'vowel' should be second column."
-        else
-
-        if (sum(is.na(vowelFile()[,indexVowel]))==nrow(vowelFile()))
-          Message <- "Column 'vowel' is empty."
-        else
-
-        if (length(grep("^duration", tolower(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'duration' not found."
-        else
-
-        if (length(grep("^time", tolower(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'time' not found."
-        else
-
-        if (length(grep("^f0", tolower(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'f0' not found."
-        else
-
-        if (length(grep("^F1", toupper(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'F1' not found."
-        else
-
-        if (length(grep("^F2", toupper(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'F2' not found."
-        else
-
-        if (length(grep("^F3", toupper(colnames(vowelFile())), value = TRUE)) == 0)
-          Message <- "Column 'F3' not found."
-        else
-          Message <- "OK"
-
-        return(Message)
+          
+        m <- checkVar("speaker" , 1, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("vowel"   , 2, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("duration", 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("time"    , 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("f0"      , 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F1"      , 0, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F2"      , 0, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F3"      , 0, F)
+        if (m!="OK") return(m)
+          
+        return("OK")
       })
-
+      
       output$checkFormat <- renderUI(
       {
         if (is.null(vowelFile()))
           return(NULL)
 
-        if (Check()!="OK")
-          return(tags$div(HTML(paste0("<font color='red'>",Check(),"</font>"))))
+        if (checkVars()!="OK")
+          return(tags$div(HTML(paste0("<font color='red'>", checkVars(), "</font><br><br>"))))
         else {}
       })
 
@@ -1848,7 +1852,7 @@ visvow <- function()
       vowelScale0 <- reactive(
       {
         if ((length(input$replyRef0)==0) || is.na(input$replyRef0))
-          Ref <- 0
+          Ref <- 50
         else
           Ref <- input$replyRef0
 
@@ -2241,12 +2245,7 @@ visvow <- function()
         if (is.null(vowelTab()))
           return(NULL)
 
-        timeCode   <- getTimeCode()
-        indexVowel <- grep("^vowel$", colnames(vowelTab()))
-        nColumns   <- ncol(vowelTab())
-        nPoints    <- (nColumns - (indexVowel + 1))/5
-
-        selectInput('catXaxis0', 'Select points:', timeCode, multiple=TRUE, selectize=FALSE, width="100%")
+        selectInput('catXaxis0', 'Select points:', getTimeCode(), multiple=TRUE, selectize=FALSE, width="100%")
       })
 
       output$selLine0 <- renderUI(
@@ -2411,7 +2410,7 @@ visvow <- function()
                          ggtitle(input$title0) +
                          scale_x_continuous(breaks = unique(vT$x)) +
                          xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
-                         facet_wrap(~vT$p) +
+                         facet_wrap(vars(p)) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint0b), family=input$replyFont0b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
@@ -2461,7 +2460,7 @@ visvow <- function()
                                plot.title     =element_text(face="bold", hjust = 0.5),
                                legend.key.size=unit(1.5, 'lines'),
                                aspect.ratio   =0.67) +
-                         guides(fill=FALSE))
+                         guides(fill="none"))
         }
         else
 
@@ -2510,13 +2509,13 @@ visvow <- function()
                          scale_x_continuous(breaks = unique(vT$x)) +
                          xlab("relative duration") + ylab(paste0(input$replyVar0," (",scaleLab0(),")")) +
                          scale_colour_discrete(name=paste0(paste(input$replyLine0, collapse = " "),"\n")) +
-                         facet_wrap(~vT$p) +
+                         facet_wrap(vars(p)) +
                          theme_bw() +
                          theme(text           =element_text(size=as.numeric(input$replyPoint0b), family=input$replyFont0b),
                                plot.title     =element_text(face="bold", hjust = 0.5),
                                legend.key.size=unit(1.5, 'lines'),
                                aspect.ratio   =0.67)+
-                         guides(fill=FALSE))
+                         guides(fill="none"))
         }
         else {}
       }
@@ -3268,7 +3267,7 @@ visvow <- function()
               scale_shape_manual(values=shpPalette())
             
             if (input$geon1)
-              Basis <- Basis + geom_point(size=2.5) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
+              Basis <- Basis + geom_point(size=2.5) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0, max.overlaps=100)
             else        
               Basis <- Basis + geom_point(size=2.5)
           }
@@ -3291,8 +3290,8 @@ visvow <- function()
               scale_shape_manual(values=shpPalette())
   
           if (input$geon1)
-              Basis <- Basis + geom_point(size=2.5, colour=colPalette1(1)) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0)
-            else        
+              Basis <- Basis + geom_point(size=2.5, colour=colPalette1(1)) + geom_text_repel(position="identity", aes(label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0, max.overlaps=100)
+            else
               Basis <- Basis + geom_point(size=2.5, colour=colPalette1(1))
           }
           else
@@ -3308,7 +3307,7 @@ visvow <- function()
           if (!input$geon1)
               Basis <- Basis + labs(colour=paste(input$replyColor1, collapse = " "), shape=paste(input$replyShape1, collapse = " "))
             else
-              Basis <- Basis + guides(colour=FALSE) + labs(shape=paste(input$replyShape1, collapse = " "))    
+              Basis <- Basis + guides(colour="none") + labs(shape=paste(input$replyShape1, collapse = " "))    
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
           {
@@ -3336,10 +3335,10 @@ visvow <- function()
             Legend <- theme(legend.position="right")
           else
           if ((numColor()>0) & (numColor()<=18))
-            Legend <- guides(shape=FALSE)
+            Legend <- guides(shape="none")
           else
           if ((numShape()>0) & (numShape()<=11))
-            Legend <- guides(color=FALSE)
+            Legend <- guides(color="none")
           else
             Legend <- theme(legend.position="none")
 
@@ -6152,7 +6151,7 @@ visvow <- function()
 
         if (is.element("points", input$mdsGeon3) &
             is.element("labels", input$mdsGeon3))
-          gp <- gp + geom_point(size = 2.0) + geom_text_repel(family=input$replyFont3b, size = fs, show.legend=FALSE)
+          gp <- gp + geom_point(size = 2.0) + geom_text_repel(family=input$replyFont3b, size = fs, show.legend=FALSE, max.overlaps=100)
         else
 
         if (is.element("points", input$mdsGeon3))
@@ -6732,8 +6731,18 @@ visvow <- function()
       {
         req(vowelTab())
 
+        if ((length(input$replyF05) == 0) || (!input$replyF05))
+          replyF05 <- F
+        else
+          replyF05 <- T
+        
+        if ((length(input$replyF35) == 0) || (!input$replyF35))
+          replyF35 <- F
+        else
+          replyF35 <- T
+
         Scale  <- unlist(optionsScale())
-        Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
+        Normal <- unlist(optionsNormal(vowelTab(), " Hz", !replyF05, !replyF35))
 
         allScalesAllowed <- c("",
                               " Peterson",
@@ -6872,7 +6881,17 @@ visvow <- function()
     
                 # Fabricius et al. (2009)
 
-                if (!input$replyF05 & !input$replyF35)
+                if ((length(input$replyF05) == 0) || (!input$replyF05))
+                  replyF05 <- F
+                else
+                  replyF05 <- T
+                
+                if ((length(input$replyF35) == 0) || (!input$replyF35))
+                  replyF35 <- F
+                else
+                  replyF35 <- T
+
+                if (!replyF05 & !replyF35)
                 {
                   fab1 <- rep(NA, length(input$replyTimes5))
                   fab2 <- rep(NA, length(input$replyTimes5))
