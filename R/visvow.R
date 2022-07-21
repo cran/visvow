@@ -690,12 +690,12 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Nearey II")
   {
     vT <- data.frame()
-    vTLong4Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
+    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
-      vTLong4AgSub  <- subset(vTLong4Ag, speaker==SpeaKer[q])
-      speakerMean   <- mean(vTLong4AgSub$f)
+      vTLong3AgSub  <- subset(vTLong3Ag, speaker==SpeaKer[q])
+      speakerMean   <- mean(vTLong3AgSub$f)
       
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
       
@@ -703,7 +703,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       {
         indexTime <- indexVowel + 2 + ((i-1)*5)
         
-        for (j in (1:4))
+        for (j in (2:4))
         {
           vTsub[,j+indexTime] <- log(vTsub[,j+indexTime]) - speakerMean
         }
@@ -853,7 +853,7 @@ optionsNormal <- function(vowelTab, replyScale, noSelF0, noSelF3)
   if (replyScale==" Hz")
     options4 <- c(options4, "Nearey (1978) I"  = " Nearey I" )
   
-  if (nonEmptyF0 & nonEmptyF3 & (replyScale==" Hz"))
+  if (noSelF0 & nonEmptyF3 & (replyScale==" Hz"))
     options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
   
   if (noSelF0 & noSelF3 & (replyScale==" Hz"))
@@ -1515,13 +1515,11 @@ visvow <- function()
             )),
 
             br(),
-            
             p("An example is schematically shown below. In this example there are three speakers labeled as 'A', 'B' and 'C'. Each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. As vowel labels IPA characters are used. Although each vowel occurs just one time per speaker, multiple pronunciations are possible. f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice."),
-            
             br(),
-            
             div(img(src = 'www/format.png', height=330), style="margin-left: 26px;"),
             br(), br(),
+
             h5(strong("Example input file")),
             p("In order to try Visible Vowels an example spreadsheet can be downloaded ", a("here", href = "www/example.xlsx", target = "_blank"), "and be loaded by this program."),
             br(),
@@ -3142,7 +3140,14 @@ visvow <- function()
           return(NULL)
 
         if ((input$axisZ=="--") && (length(replyTimes1())==1) && (length(input$geon5)>0) && input$geon5)
-          numericInput('replyLevel', 'Confidence level:', value=0.95, step=0.01, width = "100%")
+        {
+          tagList(splitLayout
+          (
+            cellWidths = c("50%", "50%"),
+            numericInput('replyLevel', 'Confidence level:', value=0.95, step=0.01, width = "100%"),
+             selectInput('replyNoise', 'Noise level:', c("\u00B1 0.001 sd", "\u00B1 0.01 sd", "\u00B1 0.1 sd", "\u00B1 0 sd"), selected = "\u00B1 0.001 sd", multiple=FALSE, selectize=FALSE, width="100%")
+          ))
+        }
         else
 
         if  (input$axisZ!="--")
@@ -3361,6 +3366,35 @@ visvow <- function()
 
           vT <- vT[order(vT$plot, vT$index, vT$time),]
           vT$index <- paste0(vT$time,vT$index)
+
+          if ((input$geon5) & length(input$replyLevel)>0)
+          {
+            if (input$replyNoise == "\u00B1 0.001 sd")
+              replyNoise <- 0.001
+            
+            if (input$replyNoise == "\u00B1 0.01 sd")
+              replyNoise <- 0.01
+            
+            if (input$replyNoise == "\u00B1 0.1 sd")
+              replyNoise <- 0.1
+            
+            if (input$replyNoise == "\u00B1 0 sd")
+              replyNoise <- 0
+            
+            sdX <- sd(vT$X) * replyNoise
+            sdY <- sd(vT$Y) * replyNoise
+            sdZ <- sd(vT$Z) * replyNoise
+            
+            set.seed(0)
+            
+            noiseX <- runif(nrow(vT), -1*sdX, sdX)
+            noiseY <- runif(nrow(vT), -1*sdY, sdY)
+            noiseZ <- runif(nrow(vT), -1*sdZ, sdZ)
+            
+            vT$X <- vT$X + noiseX
+            vT$Y <- vT$Y + noiseY
+            vT$Z <- vT$Z + noiseZ
+          }
 
           Basis <- ggplot(data = vT, aes(x=X, y=Y, fill=color, color=color))
           Fill  <- geom_blank()
@@ -5596,7 +5630,7 @@ visvow <- function()
         {
           for (i in (2:nl))
           {
-            incProgress(1/nl, message = paste("Calculating ...", format((i/nl)*100, digits=0), "%"))
+            incProgress(1/nl, message = paste("Calculating ...", format(round2((i/nl)*100)), "%"))
 
             iSub <- subset(vT, speaker==labs[i])
 
@@ -5687,7 +5721,7 @@ visvow <- function()
         {
           for (i in (1:nl))
           {
-            incProgress(1/nl, message = paste("Calculating part 1/2 ...", format((i/nl)*100, digits=0), "%"))
+            incProgress(1/nl, message = paste("Calculating part 1/2 ...", format(round2((i/nl)*100)), "%"))
 
             iSub <- subset(vT, speaker==labs[i])
             iVec <- vDist(iSub)
@@ -5724,7 +5758,7 @@ visvow <- function()
         {
           for (i in (2:nl))
           {
-            incProgress(1/nl, message = paste("Calculating part 2/2 ...", format((i/nl)*100, digits=0), "%"))
+            incProgress(1/nl, message = paste("Calculating part 2/2 ...", format(round2((i/nl)*100)), "%"))
 
             iVec <- subset(vec, speaker==labs[i])$dist
 
@@ -6774,7 +6808,7 @@ visvow <- function()
             for (j in 1:length(Normal))
             {
               loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+              incProgress((1/nLoop), message = paste("Calculating ...", format(round2((loop/nLoop)*100)), "%"))
 
               if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
               {
@@ -7010,7 +7044,7 @@ visvow <- function()
             for (j in 1:(i-1))
             {
               loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+              incProgress((1/nLoop), message = paste("Calculating ...", format(round2((loop/nLoop)*100)), "%"))
 
               global$replyScale5  <- Scale[j]
               vT2 <- vowelSubS5()
@@ -7061,7 +7095,7 @@ visvow <- function()
             for (j in 1:(i-1))
             {
               loop <- loop + 1
-              incProgress((1/nLoop), message = paste("Calculating ...", format((loop/(nLoop))*100, digits=0), "%"))
+              incProgress((1/nLoop), message = paste("Calculating ...", format(round2((loop/nLoop)*100)), "%"))
 
               global$replyNormal5 <- Normal[j]
               vT2 <- vowelSubS5()

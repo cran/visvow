@@ -1,13 +1,13 @@
-1f25b5df7aa0e04c045d9cd4aaf76c93 *DESCRIPTION
+0a0a951564b3a9903dec6be0a0dd879d *DESCRIPTION
 b6dde119479c3389c2a072e00fae5581 *NAMESPACE
-ecf159e09c90112b51e6d6745e79393b *R/visvow.R
-f271a828fb92c5d4b828989d5ebbb498 *build/partial.rdb
-a3741dce9c03592d7f2faee0f8f7801d *build/vignette.rds
+ba088e1e5cc35eab7c2cb45184f9839b *R/visvow.R
+0feb64b1bee6e2efb47f3a5bc634c279 *build/partial.rdb
+c0df4ca82cac5f5014046f3f5c18cc18 *build/vignette.rds
 6e8ac29945864c583055337b6ddb808f *inst/CITATION
 bf0dd08212aa82a63cd21424000ca18e *inst/FA1.jpg
 13a8892dc98afb451a59780a59dacf21 *inst/FA2.png
 a7351f5359090a102b014b0579da4e61 *inst/REFERENCES.bib
-2a2186112f81df80f9d58e031287e518 *inst/doc/visvow.pdf
+4b1a662893780b203cbe4326d5aa9d59 *inst/doc/visvow.pdf
 e3a30b40718649a904ef90fed2c189d6 *inst/doc/visvow.pdf.asis
 623d65bfb5ccb984026fac2e0c840e1a *inst/email.png
 9271f28cf09dd70b5c544a44a549f85d *inst/example.xlsx
@@ -34,7 +34,7 @@ a1a8407008f722279a772f8bd9960714 *tests/testthat/data/LobanovD.csv
 f362f3b526a74e6019b890e2bfaede21 *tests/testthat/data/LobanovF.csv
 d6b62faa1c449a83a0fb0ff9d3fc9571 *tests/testthat/data/MillerF.csv
 26a17a1378a185ea653dc4eaf23a7c38 *tests/testthat/data/Nearey_IF.csv
-a43b6d50c3e723495a9a200f09138eec *tests/testthat/data/Nearey_IIF.csv
+6c5bc53f6ce2df62c9ecf07fd28f3db9 *tests/testthat/data/Nearey_IIF.csv
 3cdff5c8ce452b311d8ec5a856f07bed *tests/testthat/data/PetersonF.csv
 3c9cdb3c87da35870243072549bc397c *tests/testthat/data/ST.csv
 63d700e39feb0c2ec01c3ea658ca121f *tests/testthat/data/SussmanF.csv
