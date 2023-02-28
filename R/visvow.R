@@ -41,16 +41,20 @@
 #' @references
 #' \insertRef{johnson:2012}{visvow}
 #'
-#' @examples
-#' if (interactive()){
-#'   visvow()
-#' }
-#'
 #' @import
-#' shiny shinyBS stats tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne plyr grid svglite Cairo tikzDevice shinybusy
+#' shiny shinyBS tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne grid svglite Cairo tikzDevice shinybusy
+#' 
+#' @importFrom 
+#' stats sd
 #'
 #' @importFrom
 #' formattable renderFormattable formattable formatter style color_tile formattableOutput
+#' 
+#' @importFrom
+#' splitstackshape expandRows
+#' 
+#' @importFrom 
+#' plyr .
 #' 
 #' @importFrom
 #' Rdpack reprompt
@@ -200,40 +204,58 @@ vowelLong2 <- function(vowelLong1)
 vowelLong3 <- function(vowelLong1)
 {
   vT <- data.frame()
-
+  
   for (j in (1:3))
   {
-    vTsub <- data.frame(speaker = vowelLong1$speaker,
-                        vowel   = vowelLong1$vowel,
-                        point   = vowelLong1$point,
-                        formant = j,
+    vTsub <- data.frame(speaker = as.factor(vowelLong1$speaker),
+                        vowel   = as.factor(vowelLong1$vowel),
+                        point   = as.factor(vowelLong1$point),
+                        formant = as.factor(j),
                         f       = log(vowelLong1[,j+4]))
-
+    
     vT <- rbind(vT,vTsub)
   }
-
+  
   return(vT)
 }
 
 vowelLong4 <- function(vowelLong1)
 {
   vT <- data.frame()
-
+  
   for (j in (0:3))
+  {
+    vTsub <- data.frame(speaker = as.factor(vowelLong1$speaker),
+                        vowel   = as.factor(vowelLong1$vowel),
+                        point   = as.factor(vowelLong1$point),
+                        formant = as.factor(j),
+                        f       = log(vowelLong1[,j+4]))
+    
+    vT <- rbind(vT,vTsub)
+  }
+  
+  return(vT)
+}
+
+vowelLongD <- function(vowelLong1)
+{
+  vT <- data.frame()
+  
+  for (j in (1:3))
   {
     vTsub <- data.frame(speaker = vowelLong1$speaker,
                         vowel   = vowelLong1$vowel,
                         point   = vowelLong1$point,
                         formant = j,
-                        f       = log(vowelLong1[,j+4]))
-
+                        f       = vowelLong1[,j+4])
+    
     vT <- rbind(vT,vTsub)
   }
-
+  
   return(vT)
 }
 
-vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,replyNormal)
+vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,vowelLongD,replyNormal)
 {
   if (is.null(vowelScale))
     return(NULL)
@@ -299,7 +321,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Miller")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(f0~speaker+vowel+point, data=vowelLong1, FUN=psych::geometric.mean)
+    vTLong1Ag <- stats::aggregate(f0~speaker+vowel+point, data=vowelLong1, FUN=psych::geometric.mean)
 
     for (q in (1:nSpeaKer))
     {
@@ -341,8 +363,8 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   {
     vT <- data.frame()
     
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel      , data=vTLong1Ag , FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel      , data=vTLong1Ag , FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
@@ -387,8 +409,8 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       
       for (j in 1:4)
       {
-        meanF[j] <- mean(vTLong1AgSub[,j+3])
-          sdF[j] <-   sd(vTLong1AgSub[,j+3])
+        meanF[j] <-      mean(vTLong1AgSub[,j+3])
+          sdF[j] <- stats::sd(vTLong1AgSub[,j+3])
       }
       
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
@@ -410,7 +432,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if ((replyNormal==" Lobanov") & (nVoWel> 1))
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
@@ -421,8 +443,8 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       
       for (j in 1:4)
       {
-        meanF[j] <- mean(vTLong1AgSub[,j+3])
-          sdF[j] <-   sd(vTLong1AgSub[,j+3])
+        meanF[j] <-      mean(vTLong1AgSub[,j+3])
+          sdF[j] <- stats::sd(vTLong1AgSub[,j+3])
       }
       
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
@@ -444,14 +466,14 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Watt & Fabricius")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
 
-      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
-      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF1 <- stats::aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- stats::aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
 
       iF1 <- min(vowelF1$f1)
       iF2 <- max(vowelF2$f2)
@@ -482,14 +504,14 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Fabricius et al.")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
 
-      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
-      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF1 <- stats::aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- stats::aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
 
       iF1 <- min(vowelF1$f1)
       iF2 <- max(vowelF2$f2)
@@ -519,14 +541,14 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Bigham")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
       
-      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
-      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF1 <- stats::aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- stats::aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
       
       iF1 <- min(vowelF1$f1)
       iF2 <- max(vowelF2$f2)
@@ -571,14 +593,14 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Heeringa & Van de Velde I")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
       
-      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
-      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF1 <- stats::aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- stats::aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
       
       k <- grDevices::chull(vowelF1$f1,vowelF2$f2)
       
@@ -588,7 +610,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       yy[length(yy)+1] <- yy[1]
       
       if ((length(xx)>=3) & (length(yy)>=3))
-        pc <- poly_center(xx,yy)
+        pc <- pracma::poly_center(xx,yy)
       else
         pc <- c(mean(xx),mean(yy))
       
@@ -609,14 +631,14 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Heeringa & Van de Velde II")
   {
     vT <- data.frame()
-    vTLong1Ag <- aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
+    vTLong1Ag <- stats::aggregate(cbind(f0,f1,f2,f3)~speaker+vowel+point, data=vowelLong1, FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
       vTLong1AgSub <- subset(vTLong1Ag, speaker==SpeaKer[q])
 
-      vowelF1 <- aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
-      vowelF2 <- aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF1 <- stats::aggregate(f1~vowel, data=vTLong1AgSub, FUN=mean)
+      vowelF2 <- stats::aggregate(f2~vowel, data=vTLong1AgSub, FUN=mean)
 
       k <- grDevices::chull(vowelF1$f1,vowelF2$f2)
 
@@ -626,12 +648,12 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       yy[length(yy)+1] <- yy[1]
 
       if ((length(xx)>=3) & (length(yy)>=3))
-        pc <- poly_center(xx,yy)
+        pc <- pracma::poly_center(xx,yy)
       else
         pc <- c(mean(vowelF1$f1[k]),mean(vowelF2$f2[k]))
       
-      xxi <- approx(1:length(xx), xx, n = 1000)$y
-      yyi <- approx(1:length(yy), yy, n = 1000)$y
+      xxi <- stats::approx(1:length(xx), xx, n = 1000)$y
+      yyi <- stats::approx(1:length(yy), yy, n = 1000)$y
       
       xxi <- xxi[1:(length(xxi)-1)]
       yyi <- yyi[1:(length(yyi)-1)]
@@ -639,13 +661,13 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
       xxg <- cut(xxi, breaks=10)
       yyg <- cut(yyi, breaks=10)
 
-      ag <- aggregate(cbind(xxi,yyi)~xxg+yyg, FUN=mean)
+      ag <- stats::aggregate(cbind(xxi,yyi)~xxg+yyg, FUN=mean)
 
       mean1 <- mean(ag$xxi)
       mean2 <- mean(ag$yyi)
       
-      sd1 <- sd(ag$xxi)
-      sd2 <- sd(ag$yyi)
+      sd1 <- stats::sd(ag$xxi)
+      sd2 <- stats::sd(ag$yyi)
 
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
 
@@ -664,12 +686,12 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Nearey I")
   {
     vT <- data.frame()
-    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
       vTLong3AgSub  <- subset(vTLong3Ag, speaker==SpeaKer[q])
-      speakerMean   <- aggregate(f~formant, data=vTLong3AgSub, FUN=mean)
+      speakerMean   <- stats::aggregate(f~formant, data=vTLong3AgSub, FUN=mean)
       
       vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
       
@@ -690,7 +712,7 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
   if (replyNormal==" Nearey II")
   {
     vT <- data.frame()
-    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
     
     for (q in (1:nSpeaKer))
     {
@@ -713,12 +735,78 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
     }
   }
 
+  if (replyNormal==" Barreda & Nearey I")
+  {
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong4, FUN=mean)
+    
+    S <- list()
+    
+    for (i in 0:3)
+    {
+      vTLong3AgSub <- subset(vTLong3Ag, vTLong3Ag$formant==i)
+      
+      N <- factor(interaction(vTLong3AgSub$vowel,vTLong3AgSub$point))
+      M <- stats::lm(f~0+speaker+N, contrasts = list(N=stats::contr.sum), data = vTLong3AgSub)
+      S[[i+1]] <- as.data.frame(stats::dummy.coef(M)$speaker)
+    }
+    
+    vT <- data.frame()
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        for (j in (1:4))
+        {
+          speakerMeanR <- S[[j]][rownames(S[[j]])==SpeaKer[q],1]
+          vTsub[,j+indexTime] <- log(vTsub[,j+indexTime]) - speakerMeanR
+        }
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+  
+  if (replyNormal==" Barreda & Nearey II")
+  {
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
+    
+    N <- factor(interaction(vTLong3Ag$vowel,vTLong3Ag$point,vTLong3Ag$formant))
+    M <- stats::lm(f~0+speaker+N, contrasts = list(N=stats::contr.sum), data = vTLong3Ag)
+    S <- as.data.frame(stats::dummy.coef(M)$speaker)
+    
+    vT <- data.frame()
+    
+    for (q in (1:nSpeaKer))
+    {
+      speakerMeanR <- S[rownames(S)==SpeaKer[q],1]
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        for (j in (2:4))
+        {
+          vTsub[,j+indexTime] <- log(vTsub[,j+indexTime]) - speakerMeanR
+        }
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+
   if (replyNormal==" Labov I")
   {
     vT <- data.frame()
 
-    vTLong2Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong2, FUN=psych::geometric.mean)
-    grandMean <- psych::geometric.mean(vTLong2Ag$f)
+    vTLong2Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong2, FUN=mean)
+    grandMean <- mean(vTLong2Ag$f)
 
     for (q in (1:nSpeaKer))
     {
@@ -742,12 +830,41 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
     }
   }
 
+  if (replyNormal==" LABOV I")
+  {
+    vT <- data.frame()
+    
+    vTLong2Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong2, FUN=psych::geometric.mean)
+    grandMean <- psych::geometric.mean(vTLong2Ag$f)
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTLong2AgSub  <- subset(vTLong2Ag, speaker==SpeaKer[q])
+      speakerMean   <- psych::geometric.mean(vTLong2AgSub$f)
+      speakerFactor <- exp(grandMean - speakerMean)
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        for (j in (2:3))
+        {
+          vTsub[,j+indexTime] <- speakerFactor * vTsub[,j+indexTime]
+        }
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+  
   if (replyNormal==" Labov II")
   {
     vT <- data.frame()
 
-    vTLong3Ag <- aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=psych::geometric.mean)
-    grandMean <- psych::geometric.mean(vTLong3Ag$f)
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=mean)
+    grandMean <- mean(vTLong3Ag$f)
 
     for (q in (1:nSpeaKer))
     {
@@ -767,6 +884,61 @@ vowelNormF <- function(vowelScale,vowelLong1,vowelLong2,vowelLong3,vowelLong4,re
         }
       }
 
+      vT <- rbind(vT,vTsub)
+    }
+  }
+
+  if (replyNormal==" LABOV II")
+  {
+    vT <- data.frame()
+    
+    vTLong3Ag <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLong3, FUN=psych::geometric.mean)
+    grandMean <- psych::geometric.mean(vTLong3Ag$f)
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTLong3AgSub  <- subset(vTLong3Ag, speaker==SpeaKer[q])
+      speakerMean   <- psych::geometric.mean(vTLong3AgSub$f)
+      speakerFactor <- exp(grandMean - speakerMean)
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        for (j in (2:4))
+        {
+          vTsub[,j+indexTime] <- speakerFactor * vTsub[,j+indexTime]
+        }
+      }
+      
+      vT <- rbind(vT,vTsub)
+    }
+  }
+  
+  if (replyNormal==" Johnson")
+  {
+    vT <- data.frame()
+    vTLongDAg <- stats::aggregate(f~speaker+vowel+point+formant, data=vowelLongD, FUN=mean)
+    
+    for (q in (1:nSpeaKer))
+    {
+      vTLongDAgSub  <- subset(vTLongDAg, speaker==SpeaKer[q])
+      deltaF <- mean(vTLongDAgSub$f/(vTLongDAgSub$formant - 0.5))
+      
+      vTsub <- subset(vowelScale, vowelScale[,1]==SpeaKer[q])
+      
+      for (i in (1:nPoints))
+      {
+        indexTime <- indexVowel + 2 + ((i-1)*5)
+        
+        for (j in (2:4))
+        {
+          vTsub[,j+indexTime] <- vTsub[,j+indexTime]/deltaF
+        }
+      }
+      
       vT <- rbind(vT,vTsub)
     }
   }
@@ -795,6 +967,12 @@ optionsScale <- function()
 
 optionsNormal <- function(vowelTab, replyScale, noSelF0, noSelF3)
 {
+   SpeaKer <- unique(vowelTab[,1])
+  nSpeaKer <- length(SpeaKer)
+  
+  if (nSpeaKer==1)
+    return(c("None" = ""))
+
   indexVowel <- grep("^vowel$", colnames(vowelTab))
 
   nonEmptyF0 <- (sum(vowelTab[,indexVowel+3]==0)!=nrow(vowelTab))
@@ -856,12 +1034,27 @@ optionsNormal <- function(vowelTab, replyScale, noSelF0, noSelF3)
   if (noSelF0 & nonEmptyF3 & (replyScale==" Hz"))
     options4 <- c(options4, "Nearey (1978) II" = " Nearey II")
   
+  if (replyScale==" Hz")
+    options4 <- c(options4, "Barreda & Nearey (2018) I"  = " Barreda & Nearey I" )
+  
+  if (noSelF0 & nonEmptyF3 & (replyScale==" Hz"))
+    options4 <- c(options4, "Barreda & Nearey (2018) II" = " Barreda & Nearey II")
+  
   if (noSelF0 & noSelF3 & (replyScale==" Hz"))
-    options4 <- c(options4, "Labov (2006) I"  = " Labov I" )
+    options4 <- c(options4, "Labov (2006) log-mean I"  = " Labov I" )
+  
+  if (noSelF0 & noSelF3 & (replyScale==" Hz"))
+    options4 <- c(options4, "Labov (2006) log-geomean I"  = " LABOV I" )
   
   if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
-    options4 <- c(options4, "Labov (2006) II" = " Labov II")
-
+    options4 <- c(options4, "Labov (2006) log-mean II" = " Labov II")
+  
+  if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
+    options4 <- c(options4, "Labov (2006) log-geomean II" = " LABOV II")
+  
+  if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
+    options4 <- c(options4, "Johnson (2018)" = " Johnson")
+  
   ###
 
   return(c("None" = "", list(" Formant-ratio normalization"=options1,
@@ -900,7 +1093,7 @@ vowelNormD <- function(vowelTab,replyNormal)
       vTAgSub <- subset(vTAg, vTAg[,1]==SpeaKer[q])
 
       meanD <- mean(vTAgSub[,2])
-        sdD <-   sd(vTAgSub[,2])
+        sdD <-   stats::sd(vTAgSub[,2])
 
       vTsub <- subset(vowelTab, vowelTab[,1]==SpeaKer[q])
       vTsub[,indexVowel+1] <- (vTsub[,indexVowel+1]-meanD)/sdD
@@ -912,14 +1105,14 @@ vowelNormD <- function(vowelTab,replyNormal)
   if ((replyNormal==" Lobanov") & (nVoWel> 1))
   {
     vT <- data.frame()
-    vTAg <- aggregate(vowelTab[,indexVowel+1]~vowelTab[,1]+vowelTab[,indexVowel], FUN=mean)
+    vTAg <- stats::aggregate(vowelTab[,indexVowel+1]~vowelTab[,1]+vowelTab[,indexVowel], FUN=mean)
 
     for (q in (1:nSpeaKer))
     {
       vTAgSub <- subset(vTAg, vTAg[,1]==SpeaKer[q])
 
       meanD <- mean(vTAgSub[,3])
-        sdD <-   sd(vTAgSub[,3])
+        sdD <-   stats::sd(vTAgSub[,3])
 
       vTsub <- subset(vowelTab, vowelTab[,1]==SpeaKer[q])
       vTsub[,indexVowel+1] <- (vTsub[,indexVowel+1]-meanD)/sdD
@@ -971,7 +1164,9 @@ visvow <- function()
       tags$style(type = 'text/css', '.shiny-progress .progress-text .progress-message { padding-top: 0px; padding-right: 3px; padding-bottom: 3px; padding-left: 10px; font-weight: bold; font-size: 18px; }'),
       tags$style(type = 'text/css', '.shiny-progress .progress-text .progress-detail { padding-top: 0px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px; font-size: 17px; }'),
 
-      img(src = "www/FA1.jpg", height = 60, align = "right", style = 'margin-right: 15px;'),
+      tags$style(type = 'text/css', '#heartbeat { width: 0; height: 0; visibility: hidden; }'),
+
+      img(src = 'FA1.png', height = 39, align = "right", style = 'margin-top: 19px; margin-right: 15px;'),
       titlePanel(title = HTML("<div class='title'>Visible Vowels<div>"), windowTitle = "Visible Vowels"),
 
       tags$head(
@@ -996,8 +1191,7 @@ visvow <- function()
 
             fluidPage
             (
-              fileInput('vowelFile', 'Upload xlsx file',accept = c(".xlsx"), width="40%"),
-              uiOutput('checkFormat')
+              fileInput('vowelFile', 'Upload xlsx file', accept = c(".xlsx"), width="40%")
             ),
 
             fluidPage
@@ -1372,8 +1566,6 @@ visvow <- function()
                 uiOutput('catGrouping3')
               ),
 
-              uiOutput('exclVow3'),
-
               radioButtons('selClass3', 'Explorative method:', c("Cluster analysis","Multidimensional scaling"), selected = "Cluster analysis", TRUE),
               uiOutput('selMethod3'),
               uiOutput('explVar3'),
@@ -1445,7 +1637,6 @@ visvow <- function()
               ),
 
               uiOutput("selF035"),
-              uiOutput('exclVow5'),
 
               br(),
 
@@ -1488,7 +1679,7 @@ visvow <- function()
 
             br(),
             h5(strong("About")),
-            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The following people were involved in the development of Visible Vowels: Wilbert Heeringa (implementation), Hans Van de Velde (project manager), Vincent van Heuven (advice). Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'email.png', height = 20, align = "center"),"."),
+            p("Visible Vowels is a web app for the analysis of acoustic vowel measurements: f0, formants and duration. The app is an useful instrument for research in phonetics, sociolinguistics, dialectology, forensic linguistics, and speech-language pathology. The following people were involved in the development of Visible Vowels: Wilbert Heeringa (implementation), Hans Van de Velde (project manager), Vincent van Heuven (advice). Visible Vowels is still under development. Comments are welcome and can be sent to", img(src = 'www/email.png', height = 20, align = "center"),"."),
             br(),
             h5(strong("System requirements")),
             p("Visible Vowels runs best on a computer with a monitor with a minimum resolution of 1370 x 870 (width x height). The use of Mozilla Firefox as a web browser is to be preferred."),
@@ -1499,25 +1690,34 @@ visvow <- function()
             
             tags$div(tags$ul
             (
-              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>General</span>"),div(tags$ul(
-                tags$li(tags$span(HTML("<span style='color:crimson'>speaker</span>") ,p("Contains the speaker labels. This column is obligatory."))),
-                tags$li(tags$span(HTML("<span style='color:crimson'>vowel</span>")   ,p("Contains the vowel labels. Multiple pronunciations of the same vowel per speaker are possible. In case you want to use IPA characters, enter them as Unicode characters. In order to find Unicode IPA characters, use the online", tags$a(href="http://westonruter.github.io/ipa-chart/keyboard/", "IPA Chart Keyboard", target="_blank"), "of Weston Ruter. This column is obligatory.")))
+              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>General</span>"), div(tags$ul(
+                tags$li(tags$span(HTML("<span style='color:crimson'>speaker</span>"), p("Contains the speaker labels. This column is obligatory."))),
+                tags$li(tags$span(HTML("<span style='color:crimson'>vowel</span>"), p("Contains the vowel labels. Multiple pronunciations of the same vowel per speaker are possible. In case you want to use IPA characters, enter them as Unicode characters. In order to find Unicode IPA characters, use the online", tags$a(href="http://westonruter.github.io/ipa-chart/keyboard/", "IPA Chart Keyboard", target="_blank"), "of Weston Ruter. This column is obligatory."))),
+                tags$li(tags$span(HTML("<span style='color:crimson'>timepoint</span>"), p("In this column the time points are labeled by numbers that indicate the order of the time points in the vowel interval. This column is obligatory only when using the long format.")))
               )))),
-                       
+                     
               tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>Sociolinguistic</span>"),div(tags$ul(
-                tags$li(tags$span(HTML("<span style='color:crimson'>...</span>")          ,p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'.")))
+                tags$li(tags$span(HTML("<span style='color:crimson'>...</span>"), p("An arbitrary number of columns representing categorical variables such as location, language, gender, age group, etc. may follow, but is not obligatory. See to it that each categorical variable has an unique set of different values. Prevent the use of numbers, rather use meaningful codes. For example, rather then using codes '1' and '2' for a variable 'age group' use 'old' and 'young' or 'o' and 'y'.")))
               )))),
                        
-              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>Vowel</span>"),div(tags$ul(
-                tags$li(tags$span(HTML("<span style='color:crimson'>duration</span>"),p("Durations of the vowels. The measurements may be either in seconds or milliseconds. This column is obligatory but may be kept empty."))),
-                tags$li(tags$span(HTML("<span style='color:crimson'>time f0 F1 F2 F3</span>"),p("A set of five columns should follow multiple times: 'time', 'f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point within the vowel interval in seconds or milliseconds, i.e. it is assumed that the vowel interval starts at 0 (milli)seconds. The f0, F1, F2 and F3 should be measured at the time given in the column 'time'. The program assumes that they are measured in Hertz and not normalized. The set of five columns may be repeated as ",em("many times"), " as the user wishes, but should occur at least one time. For each repetition the same column names should be used. A set should always include all five columns, but the columns 'time', 'f0' and 'F3' may be kept empty.")))
+              tags$li(tags$span(HTML("<span style='font-variant: small-caps; color:blue'>Vowel</span>"), div(tags$ul(
+                tags$li(tags$span(HTML("<span style='color:crimson'>duration</span>"), p("Durations of the vowels. The measurements may be either in seconds or milliseconds. This column is obligatory but may be kept empty."))),
+                tags$li(tags$span(HTML("<span style='color:crimson'>time f0 F1 F2 F3</span>"), p("A set of five columns should follow: 'time', 'f0', 'F1', 'F2' and 'F3'. The variable 'time' gives the time point at which f0, F1, F2 and F3 are measured. This time point within the vowel interval should be measured in seconds or milliseconds. It is assumed that the vowel interval starts at 0 (milli)seconds. It is assumed that f0, F1, F2 and F3 are measured in Hertz and not normalized. A set should always include all five columns, but the columns 'time', 'f0' and 'F3' may be kept empty. ", em("As many"), " sets can be included as time points within the vowel interval are chosen. But a set should occur at least one time. When using the wide format, all the sets are found in the same row, and for each set the same column names should be used. When using the long format, each set is found in a seperate row, and rows that refer to the same realization are distinguished by the codes in the 'timepoint' column.")))
               ))))
             )),
-
+            
             br(),
-            p("An example is schematically shown below. In this example there are three speakers labeled as 'A', 'B' and 'C'. Each of the speakers pronounced four different vowels: i\u02D0, \u025B, a\u02D0 and \u0254. As vowel labels IPA characters are used. Although each vowel occurs just one time per speaker, multiple pronunciations are possible. f0, F1, F2 and F3 are given for two different time points, hence the set of five columns comprising 'time', 'f0', 'F1', 'F2' and 'F3' occurs twice."),
+            p("Below both the wide and the long format are schematically shown by means of an example. In this example there are three speakers labeled as 'A', 'B' and 'C'. Each of the speakers pronounced two different vowels: i: and \u0254. Each vowel has been pronounced twice by each speaker, and for each realization f0, F1, F2 and F3 are measured at two time points."),
             br(),
-            div(img(src = 'www/format.png', height=330), style="margin-left: 26px;"),
+            p("Note the importance of the numbers in the fourth column in the long table, where they make it clear which measurements at multiple time points relate to the same vowel realization. In fact, the long format requires that all cases in the table be uniquely defined by the combination of the 'speaker' variable, the 'vowel' variable, the 'timepoint' variable and the categorical variables that follow, i.e. the pink, yellow, grey and white columns to the left of the 'duration' variable."),
+            br(),
+            p(em("Wide format"), style="margin-left: 41px;"),
+            br(),
+            div(img(src = 'www/format1.png', width=580), style="margin-left: 41px;"),
+            br(), br(),
+            p(em("Long format"), style="margin-left: 41px;"),
+            br(),
+            div(img(src = 'www/format2.png', width=450), style="margin-left: 41px;"),
             br(), br(),
 
             h5(strong("Example input file")),
@@ -1551,10 +1751,12 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>base</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shiny</span>"),p("Winston Chang, Joe Cheng, J.J. Allaire, Yihui Xie and Jonathan McPherson (2017). shiny: Web Application Framework for R. R package version 1.0.0. https://CRAN.R-project.org/package=shiny"))),
               tags$li(tags$span(HTML("<span style='color:blue'>shinyBS</span>"),p("Eric Bailey (2015). shinyBS: Twitter Bootstrap Components for Shiny. R package version 0.61. https://CRAN.R-project.org/package=shinyBS"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>splitstackshape</span>"),p("Ananda Mahto (2019). splitstackshape: Stack and Reshape Datasets After Splitting Concatenated Values. R package version 1.4.8. https://CRAN.R-project.org/package=splitstackshape"))),
               tags$li(tags$span(HTML("<span style='color:blue'>stats</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>tydr</span>"),p("Hadley Wickham and Lionel Henry (2019). tidyr: Tidy Messy Data. R package version 1.0.0. https://CRAN.R-project.org/package=tidyr"))),
               tags$li(tags$span(HTML("<span style='color:blue'>PBSmapping</span>"),p("Jon T. Schnute, Nicholas Boers and Rowan Haigh (2019). PBSmapping: Mapping Fisheries Data and Spatial Analysis Tools. R package version 2.72.1. https://CRAN.R-project.org/package=PBSmapping"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>splitstackshape</span>"),p("Ananda Mahto (2019). splitstackshape: Stack and Reshape Datasets After Splitting Concatenated Values. R package version 1.4.8. https://CRAN.R-project.org/package=splitstackshape"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>plyr</span>"),p("Hadley Wickham (2011). The Split-Apply-Combine Strategy for Data Analysis. Journal of Statistical Software, 40(1), 1-29. URL http://www.jstatsoft.org/v40/i01/"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>dplyr</span>"),p("Hadley Wickham, Romain Fran\u00E7ois, Lionel Henry and Kirill M\u00FCller (2022). dplyr: A Grammar of Data Manipulation. R package version 1.0.10. https://CRAN.R-project.org/package=dplyr"))),
               tags$li(tags$span(HTML("<span style='color:blue'>formattable</span>"),p("Kun Ren and Kenton Russell (2016). formattable: Create 'Formattable' Data Structures. R package version 0.2.0.1. https://CRAN.R-project.org/package=formattable"))),
               tags$li(tags$span(HTML("<span style='color:blue'>ggplot2</span>"),p("H. Wickham (2009). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York. http://ggplot2.org"))),
               tags$li(tags$span(HTML("<span style='color:blue'>plot3D</span>"),p("Karline Soetaert (2017). plot3D: Plotting Multi-Dimensional Data. R package version 1.1.1. https://CRAN.R-project.org/package=plot3D"))),
@@ -1564,10 +1766,9 @@ visvow <- function()
               tags$li(tags$span(HTML("<span style='color:blue'>readxl</span>"),p("Hadley Wickham and Jennifer Bryan (2017). readxl: Read Excel Files. R package version 1.0.0. https://CRAN.R-project.org/package=readxl"))),
               tags$li(tags$span(HTML("<span style='color:blue'>WriteXLS</span>"),p("Marc Schwartz and various authors. (2015). WriteXLS: Cross-Platform Perl Based R Function to Create Excel 2003 (XLS) and Excel 2007 (XLSX) Files. R package version 4.0.0. https://CRAN.R-project.org/package=WriteXLS"))),
               tags$li(tags$span(HTML("<span style='color:blue'>DT</span>"),p("Yihui Xie (2016). DT: A Wrapper of the JavaScript Library 'DataTables'. R package version 0.2. https://CRAN.R-project.org/package=DT"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>psych</span>"),p("W. Revelle (2016). psych: Procedures for Personality and Psychological Research, Northwestern University, Evanston, Illinois, USA, Version = 1.6.12, https://CRAN.R-project.org/package=psych"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>psych</span>"),p("William Revelle (2016). psych: Procedures for Personality and Psychological Research, Northwestern University, Evanston, Illinois, USA, Version = 1.6.12, https://CRAN.R-project.org/package=psych"))),
               tags$li(tags$span(HTML("<span style='color:blue'>pracma</span>"),p("Hans Werner Borchers (2017). pracma: Practical Numerical Math Functions. R package version 1.9.9. https://CRAN.R-project.org/package=pracma"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>Rtsne</span>"),p("Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation, URL: https://github.com/jkrijthe/Rtsne"),p("L.J.P. van der Maaten and G.E. Hinton (2008). Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605"),p("L.J.P. van der Maaten (2014). Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245"))),
-              tags$li(tags$span(HTML("<span style='color:blue'>plyr</span>"),p("Hadley Wickham (2011). The Split-Apply-Combine Strategy for Data Analysis. Journal of Statistical Software, 40(1), 1-29. URL http://www.jstatsoft.org/v40/i01/"))),
+              tags$li(tags$span(HTML("<span style='color:blue'>Rtsne</span>"),p("Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation. https://github.com/jkrijthe/Rtsne"),p("L.J.P. van der Maaten and G.E. Hinton (2008). Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605"),p("L.J.P. van der Maaten (2014). Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245"))),
               tags$li(tags$span(HTML("<span style='color:blue'>grid</span>"),p("R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/"))),
               tags$li(tags$span(HTML("<span style='color:blue'>svglite</span>"),p("Hadley Wickham, Lionel Henry, T Jake Luciani, Matthieu Decorde and Vaudor Lise (2016). svglite: An 'SVG' Graphics Device. R package version 1.2.0. https://CRAN.R-project.org/package=svglite"))),
               tags$li(tags$span(HTML("<span style='color:blue'>Cairo</span>"),p("Simon Urbanek and Jeffrey Horner (2015). Cairo: R graphics device using cairo graphics library for creating high-quality bitmap (PNG, JPEG, TIFF),  vector (PDF, SVG, PostScript) and display (X11 and Win32) output. R package version 1.5-9. https://CRAN.R-project.org/package=Cairo"))),
@@ -1612,7 +1813,9 @@ visvow <- function()
             br()
           )
         ))
-      )
+      ),
+      
+      tags$td(textOutput("heartbeat"))
     ),
 
     ############################################################################
@@ -1632,7 +1835,18 @@ visvow <- function()
         Hash <- gsub("#", "", Hash)
         updateNavbarPage(session, "navBar", selected=Hash)
       })
+      
+      output$heartbeat <- renderText(
+      {
+        invalidateLater(5000)
+        Sys.time()
+      })
 
+      observe({
+        message("Press ESC once or more to exit, ignore warnings")
+        options(warn = -1)
+      })
+      
       ##########################################################################
 
       vowelFile <- reactive(
@@ -1643,8 +1857,184 @@ visvow <- function()
           return(NULL)
 
         file.rename(inFile$datapath, paste0(inFile$datapath,".xlsx"))
-        return(as.data.frame(read_excel(paste0(inFile$datapath,".xlsx"), 1, .name_repair = "minimal")))
+        vT <- as.data.frame(read_excel(paste0(inFile$datapath,".xlsx"), sheet=1, .name_repair = "minimal"))
+
+        # wide format
+        if (!("timepoint" %in% colnames(vT)))
+        {
+          return(vT)
+        }  
+
+        # long format
+        if   ("timepoint" %in% colnames(vT))
+        {
+          timepoint <- vT$timepoint
+          vT$timepoint <- NULL
+          
+          indexDuration <- grep("^duration$", tolower(colnames(vT)))
+          ngroups <- (ncol(vT) - indexDuration) / 5
+          
+          if (ngroups == 1)
+          {
+            freq <- data.frame(table(timepoint))
+            
+            if (mean(freq$Freq) != round(mean(freq$Freq)))
+            {
+              showNotification("The number of time points is not the same for all cases!", type = "error", duration = 10)
+              return(NULL)
+            }
+            
+            if (!unique((sort(freq$timepoint) == 1:length(freq$timepoint))))
+            {
+              showNotification("Numbering of time points is not correct!", type = "error", duration = 10)
+              return(NULL)
+            }
+            
+            superIndex <- ""
+            
+            for (i in 1:(indexDuration-1))
+            {
+              superIndex <- paste0(superIndex, vT[,i])
+            }
+            
+            ntimepoints <- nrow(freq)
+            
+            if ((nrow(vT)/ntimepoints) > length(unique(superIndex)))
+            {
+              showNotification("Not all cases are uniquely defined!", type = "error", duration = 10)
+              return(NULL)
+            }
+            
+            vT <- vT[order(superIndex, timepoint),]
+
+            df <- dplyr::filter(vT, ((dplyr::row_number() %% ntimepoints)) == 1)
+            df <- df[, 1:indexDuration]
+            
+            for (g in (1:ntimepoints))
+            {
+              if (g==ntimepoints) g0 <- 0 else g0 <- g
+              
+              df0 <- dplyr::filter(vT, ((dplyr::row_number() %% ntimepoints)) == g0)
+              df0 <- df0[, (indexDuration+1):(indexDuration+5)]
+              
+              df <- cbind(df, df0)
+            }
+            
+            return(df)
+          }
+          else
+          {
+            showNotification("Cannot have both a variable timepoint and multiple time points in one row!", type = "error", duration = 10)
+            return(NULL)
+          }
+        }
       })
+
+      checkVar <- function(varName, varIndex, checkEmpty)
+      {
+        indexVar <- grep(paste0("^", varName, "$"), tolower(colnames(vowelFile())))
+        
+        if (!is.element(tolower(varName), tolower(colnames(vowelFile()))))
+          Message <- paste0("Column '", varName, "' not found.")
+        else
+          
+        if ((varIndex!=0) && (tolower(colnames(vowelFile())[varIndex])!=tolower(varName)))
+          Message <- paste0("'", varName, "' found in the wrong column.")
+        else
+            
+        if (checkEmpty && (sum(is.na(vowelFile()[,indexVar]))==nrow(vowelFile())))
+          Message <- paste0("Column '", varName, "' is empty.")
+        else
+          Message <- "OK"          
+            
+        return(Message)
+      }
+      
+      checkVars <- reactive(
+      {
+        if (is.null(vowelFile()))
+          return(NULL)
+          
+        m <- checkVar("speaker" , 1, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("vowel"   , 2, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("duration", 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("time"    , 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("f0"      , 0, F)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F1"      , 0, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F2"      , 0, T)
+        if (m!="OK") return(m)
+          
+        m <- checkVar("F3"      , 0, F)
+        if (m!="OK") return(m)
+          
+        return("OK")
+      })
+      
+      Round <- function(x)
+      {
+        return(trunc(x+0.5))
+      }
+
+      vowelRound <- reactive(
+      {
+        if (is.null(vowelFile()))
+          return(NULL)
+
+        # check
+        if (checkVars()!="OK")
+        {
+          showNotification(checkVars(), type = "error", duration = 10)
+          return(NULL)
+        }
+
+        vT <- vowelFile()
+
+        nColumns <- ncol(vT)
+
+        for (i in (1:nColumns))
+        {
+          if (grepl("^duration",tolower(colnames(vT)[i])) |
+              grepl("^time"    ,tolower(colnames(vT)[i])) |
+              grepl("^f0"      ,tolower(colnames(vT)[i])) |
+              grepl("^F1"      ,toupper(colnames(vT)[i])) |
+              grepl("^F2"      ,toupper(colnames(vT)[i])) |
+              grepl("^F3"      ,toupper(colnames(vT)[i])))
+          {
+            if (is.character(vT[,i]))
+            {
+              vT[,i] <- as.numeric(vT[,i])
+            }
+
+            if (sum(is.na(vT[,i]))<nrow(vT))
+            {
+              if (max(vT[,i], na.rm = TRUE)<=1)
+              {
+                vT[,i] <- round(((Round(vT[,i]*1000))/1000),3)
+              }
+              else
+              {
+                vT[,i] <- Round(vT[,i])
+              }
+            }
+          }
+        }
+
+        return(vT)
+      })
+
+      output$vowelRound <- DT::renderDataTable(expr = vowelRound(), options = list(scrollX = TRUE))
 
       vowelTab <- reactive(
       {
@@ -1707,115 +2097,6 @@ visvow <- function()
         return(vT)
       })
 
-      checkVar <- function(varName, varIndex, checkEmpty)
-      {
-        indexVar <- grep(paste0("^", varName, "$"), tolower(colnames(vowelFile())))
-        
-        if (!is.element(tolower(varName), tolower(colnames(vowelFile()))))
-          Message <- paste0("Column '", varName, "' not found.")
-        else
-          
-        if ((varIndex!=0) && (tolower(colnames(vowelFile())[varIndex])!=tolower(varName)))
-          Message <- paste0("'", varName, "' found in the wrong column.")
-        else
-            
-        if (checkEmpty && (sum(is.na(vowelFile()[,indexVar]))==nrow(vowelFile())))
-          Message <- paste0("Column '", varName, "' is empty.")
-        else
-          Message <- "OK"          
-            
-        return(Message)
-      }
-      
-      checkVars <- reactive(
-      {
-        if (is.null(vowelFile()))
-          return(NULL)
-          
-        m <- checkVar("speaker" , 1, T)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("vowel"   , 2, T)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("duration", 0, F)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("time"    , 0, F)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("f0"      , 0, F)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("F1"      , 0, T)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("F2"      , 0, T)
-        if (m!="OK") return(m)
-          
-        m <- checkVar("F3"      , 0, F)
-        if (m!="OK") return(m)
-          
-        return("OK")
-      })
-      
-      output$checkFormat <- renderUI(
-      {
-        if (is.null(vowelFile()))
-          return(NULL)
-
-        if (checkVars()!="OK")
-          return(tags$div(HTML(paste0("<font color='red'>", checkVars(), "</font><br><br>"))))
-        else {}
-      })
-
-      Round <- function(x)
-      {
-        return(trunc(x+0.5))
-      }
-
-      vowelRound <- reactive(
-      {
-        if (is.null(vowelFile()))
-          return(NULL)
-
-        vT <- vowelFile()
-
-        nColumns <- ncol(vT)
-
-        for (i in (1:nColumns))
-        {
-          if (grepl("^duration",tolower(colnames(vT)[i])) |
-              grepl("^time"    ,tolower(colnames(vT)[i])) |
-              grepl("^f0"      ,tolower(colnames(vT)[i])) |
-              grepl("^F1"      ,toupper(colnames(vT)[i])) |
-              grepl("^F2"      ,toupper(colnames(vT)[i])) |
-              grepl("^F3"      ,toupper(colnames(vT)[i])))
-          {
-            if (is.character(vT[,i]))
-            {
-              vT[,i] <- as.numeric(vT[,i])
-            }
-
-            if (sum(is.na(vT[,i]))<nrow(vT))
-            {
-              if (max(vT[,i], na.rm = TRUE)<=1)
-              {
-                vT[,i] <- round(((Round(vT[,i]*1000))/1000),3)
-              }
-              else
-              {
-                vT[,i] <- Round(vT[,i])
-              }
-            }
-          }
-        }
-
-        return(vT)
-      })
-
-      output$vowelRound <- DT::renderDataTable(expr = vowelRound(), options = list(scrollX = TRUE))
-
       vowelExcl <- reactive(
       {
         if (is.null(vowelTab()) || (nrow(vowelTab())==0))
@@ -1844,6 +2125,21 @@ visvow <- function()
         else
           return(subset(vowelTab(), !is.element(vowelTab()$vowel,vowelExcl())))
       })
+
+      showExclVow <- function()
+      {
+        if (length(vowelExcl()) > 0)
+        {
+          vowels <- "Vowels excluded: "
+    
+          for (i in 1:length(vowelExcl()))
+          {
+            vowels <- paste(vowels, vowelExcl()[i])
+          }
+    
+          showNotification(vowels, type = "error", duration = 30)    
+        }
+      }
 
       ##########################################################################
 
@@ -1988,13 +2284,13 @@ visvow <- function()
 
           if (is.element("average",input$selGeon0))
           {
-            vT0 <- aggregate(y~x+s+v, data=vT0, FUN=mean)
-            vT0 <- aggregate(y~x+  v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+s+v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+  v, data=vT0, FUN=mean)
           }
 
-          ag    <- aggregate(y~x, data=vT0, FUN=mean)
-          ag$sd <- aggregate(y~x, data=vT0, FUN=sd)[,2]
-          ag$n  <- aggregate(y~x, data=vT0, FUN=length)[,2]
+          ag    <- stats::aggregate(y~x, data=vT0, FUN=mean)
+          ag$sd <- stats::aggregate(y~x, data=vT0, FUN=sd)[,2]
+          ag$n  <- stats::aggregate(y~x, data=vT0, FUN=length)[,2]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure0=="SD")
@@ -2048,14 +2344,14 @@ visvow <- function()
 
           if (is.element("average",input$selGeon0))
           {
-            vT0 <- aggregate(y~x+p+s+v, data=vT0, FUN=mean)
-            vT0 <- aggregate(y~x+p+  v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+p+s+v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+p+  v, data=vT0, FUN=mean)
           }
 
-          ag    <- aggregate(y~x+p, data=vT0, FUN=mean)
-          ag$sd <- aggregate(y~x+p, data=vT0, FUN=sd)[,3]
+          ag    <- stats::aggregate(y~x+p, data=vT0, FUN=mean)
+          ag$sd <- stats::aggregate(y~x+p, data=vT0, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(y~x+p, data=vT0, FUN=length)[,3]
+          ag$n  <- stats::aggregate(y~x+p, data=vT0, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure0=="SD")
@@ -2112,14 +2408,14 @@ visvow <- function()
 
           if (is.element("average",input$selGeon0))
           {
-            vT0 <- aggregate(y~x+l+s+v, data=vT0, FUN=mean)
-            vT0 <- aggregate(y~x+l+  v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+l+s+v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+l+  v, data=vT0, FUN=mean)
           }
 
-          ag    <- aggregate(y~x+l, data=vT0, FUN=mean)
-          ag$sd <- aggregate(y~x+l, data=vT0, FUN=sd)[,3]
+          ag    <- stats::aggregate(y~x+l, data=vT0, FUN=mean)
+          ag$sd <- stats::aggregate(y~x+l, data=vT0, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(y~x+l, data=vT0, FUN=length)[,3]
+          ag$n  <- stats::aggregate(y~x+l, data=vT0, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure0=="SD")
@@ -2179,14 +2475,14 @@ visvow <- function()
 
           if (is.element("average",input$selGeon0))
           {
-            vT0 <- aggregate(y~x+p+l+s+v, data=vT0, FUN=mean)
-            vT0 <- aggregate(y~x+p+l+  v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+p+l+s+v, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(y~x+p+l+  v, data=vT0, FUN=mean)
           }
 
-          ag    <- aggregate(y~x+p+l, data=vT0, FUN=mean)
-          ag$sd <- aggregate(y~x+p+l, data=vT0, FUN=sd)[,4]
+          ag    <- stats::aggregate(y~x+p+l, data=vT0, FUN=mean)
+          ag$sd <- stats::aggregate(y~x+p+l, data=vT0, FUN=sd)[,4]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(y~x+p+l, data=vT0, FUN=length)[,4]
+          ag$n  <- stats::aggregate(y~x+p+l, data=vT0, FUN=length)[,4]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure0=="SD")
@@ -2348,9 +2644,9 @@ visvow <- function()
             vS <- vT
           else
           {
-            vS <- data.frame(spline(vT$x, vT$y, n=nrow(vT)*10))
-            vS$ll <- spline(vT$x, vT$ll, n=nrow(vT)*10)$y
-            vS$ul <- spline(vT$x, vT$ul, n=nrow(vT)*10)$y
+            vS <- data.frame(stats::spline(vT$x, vT$y, n=nrow(vT)*10))
+            vS$ll <- stats::spline(vT$x, vT$ll, n=nrow(vT)*10)$y
+            vS$ul <- stats::spline(vT$x, vT$ul, n=nrow(vT)*10)$y
           }
 
           if (is.element("points", input$selGeon0))
@@ -2386,9 +2682,9 @@ visvow <- function()
             for (i in 1:length(panels))
             {
               vSsub <- subset(vT, p==panels[i])
-              vSspl <- data.frame(spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), p=panels[i])
-              vSspl$ll <- spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
-              vSspl$ul <- spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
+              vSspl <- data.frame(stats::spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), p=panels[i])
+              vSspl$ll <- stats::spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
+              vSspl$ul <- stats::spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
               vS <- rbind(vS,vSspl)
             }
 
@@ -2430,9 +2726,9 @@ visvow <- function()
             for (i in 1:length(lines))
             {
               vSsub <- subset(vT, l==lines[i])
-              vSspl <- data.frame(spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), l=lines[i])
-              vSspl$ll <- spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
-              vSspl$ul <- spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
+              vSspl <- data.frame(stats::spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), l=lines[i])
+              vSspl$ll <- stats::spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
+              vSspl$ul <- stats::spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
               vS <- rbind(vS,vSspl)
             }
 
@@ -2482,9 +2778,9 @@ visvow <- function()
 
                 if (nrow(vSsub)>0)
                 {
-                  vSspl <- data.frame(spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), p=panels[i], l=lines[j])
-                  vSspl$ll <- spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
-                  vSspl$ul <- spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
+                  vSspl <- data.frame(stats::spline(vSsub$x, vSsub$y, n=nrow(vSsub)*10), p=panels[i], l=lines[j])
+                  vSspl$ll <- stats::spline(vSsub$x, vSsub$ll, n=nrow(vSsub)*10)$y
+                  vSspl$ul <- stats::spline(vSsub$x, vSsub$ul, n=nrow(vSsub)*10)$y
                   vS <- rbind(vS,vSspl)
                 }
               }
@@ -2675,26 +2971,25 @@ visvow <- function()
         if (length(input$replyNormal1)==0)
           return(NULL)
 
-        indexVowel <- grep("^vowel$", colnames(vowelScale1()))
-        nColumns   <- ncol(vowelScale1())
-        nPoints    <- (nColumns - (indexVowel + 1))/5
-
         if (!is.null(replyTimesN1()))
           replyTimesN <- replyTimesN1()
         else
           return(NULL)
 
-        if (!is.null(replyTimesN1()))
-          replyTimesN <- replyTimesN1()
-        else
-          return(NULL)
+        indexDuration <- grep("^duration$", tolower(colnames(vowelScale1())))
+        nPoints       <- (ncol(vowelScale1()) - indexDuration) / 5
+        
+        if (max(replyTimesN) > nPoints)
+          replyTimesN <- Round(nPoints/2)
+        else {}
         
         vL1 <- vowelLong1(vowelScale1(),replyTimesN)
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
         vL4 <- vowelLong4(vL1)
-
-        return(vowelNormF(vowelScale1(),vL1,vL2,vL3,vL4,input$replyNormal1))
+        vLD <- vowelLongD(vL1)
+    
+        return(vowelNormF(vowelScale1(), vL1, vL2, vL3, vL4, vLD, input$replyNormal1))
       })
 
       vowelSub1 <- reactive(
@@ -2863,7 +3158,7 @@ visvow <- function()
           }
 
           if (input$average1 | input$ltf1)
-            vT0 <- aggregate(cbind(X,Y,Z)~speaker+vowel+color+shape+plot+time, data=vT0, FUN=mean)
+            vT0 <- stats::aggregate(cbind(X,Y,Z)~speaker+vowel+color+shape+plot+time, data=vT0, FUN=mean)
 
           if (input$ltf1)
           {
@@ -2883,9 +3178,9 @@ visvow <- function()
 
         if ((nrow(vT)>0) & (input$average1 | input$ltf1))
         {
-          vT <- aggregate(cbind(X,Y,Z)~vowel+color+shape+plot+time, data=vT, FUN=mean)
+          vT <- stats::aggregate(cbind(X,Y,Z)~vowel+color+shape+plot+time, data=vT, FUN=mean)
 
-          no <- nrow(aggregate(cbind(X,Y,Z)~vowel+color+shape+plot, data=vT, FUN=mean))
+          no <- nrow(stats::aggregate(cbind(X,Y,Z)~vowel+color+shape+plot, data=vT, FUN=mean))
           index <- seq(1:no)
           vT$index <- rep(index,length(replyTimes1()))
         }
@@ -3362,7 +3657,7 @@ visvow <- function()
         {
           vT <- vowelSub1()
 
-          centers <- aggregate(cbind(X,Y)~color+plot, data=vT, FUN=mean)
+          centers <- stats::aggregate(cbind(X,Y)~color+plot, data=vT, FUN=mean)
 
           vT <- vT[order(vT$plot, vT$index, vT$time),]
           vT$index <- paste0(vT$time,vT$index)
@@ -3381,15 +3676,15 @@ visvow <- function()
             if (input$replyNoise == "\u00B1 0 sd")
               replyNoise <- 0
             
-            sdX <- sd(vT$X) * replyNoise
-            sdY <- sd(vT$Y) * replyNoise
-            sdZ <- sd(vT$Z) * replyNoise
+            sdX <- stats::sd(vT$X) * replyNoise
+            sdY <- stats::sd(vT$Y) * replyNoise
+            sdZ <- stats::sd(vT$Z) * replyNoise
             
             set.seed(0)
             
-            noiseX <- runif(nrow(vT), -1*sdX, sdX)
-            noiseY <- runif(nrow(vT), -1*sdY, sdY)
-            noiseZ <- runif(nrow(vT), -1*sdZ, sdZ)
+            noiseX <- stats::runif(nrow(vT), -1*sdX, sdX)
+            noiseY <- stats::runif(nrow(vT), -1*sdY, sdY)
+            noiseZ <- stats::runif(nrow(vT), -1*sdZ, sdZ)
             
             vT$X <- vT$X + noiseX
             vT$Y <- vT$Y + noiseY
@@ -3421,7 +3716,7 @@ visvow <- function()
 
           if (input$geon3)
           {
-            chulls <- ddply(vT, .(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
+            chulls <- plyr::ddply(vT, .(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
 
             if ((length(unique(vT$color))==1) | (as.character(input$replyColor1)[1]=="vowel"))
             {
@@ -3542,8 +3837,8 @@ visvow <- function()
             {
               vTsub <- subset(vT, index==i)
 
-              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
-              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
+              xx <- c(xx, stats::spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
+              yy <- c(yy, stats::spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
             }
 
             vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
@@ -3750,9 +4045,9 @@ visvow <- function()
             {
               vTsub <- subset(vT, index==i)
 
-              xx <- c(xx, spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
-              yy <- c(yy, spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
-              zz <- c(zz, spline(vTsub$time, vTsub$Z, n=length(replyTimes1())*10)$y)
+              xx <- c(xx, stats::spline(vTsub$time, vTsub$X, n=length(replyTimes1())*10)$y)
+              yy <- c(yy, stats::spline(vTsub$time, vTsub$Y, n=length(replyTimes1())*10)$y)
+              zz <- c(zz, stats::spline(vTsub$time, vTsub$Z, n=length(replyTimes1())*10)$y)
             }
 
             vT <- splitstackshape::expandRows(vT, 10, count.is.col = F, drop = F)
@@ -4190,14 +4485,14 @@ visvow <- function()
           if (is.element("average",input$selGeon4))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, speaker=vT$speaker, vowel=vT$vowel, dynamics=vT$dynamics)
-            vT <- aggregate(dynamics ~ indexXaxis + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(dynamics ~ indexXaxis +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$dynamics ~ vT$indexXaxis, FUN=mean)
-          ag$sd <- aggregate(vT$dynamics ~ vT$indexXaxis, FUN=sd)[,2]
+          ag    <- stats::aggregate(vT$dynamics ~ vT$indexXaxis, FUN=mean)
+          ag$sd <- stats::aggregate(vT$dynamics ~ vT$indexXaxis, FUN=sd)[,2]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$dynamics ~ vT$indexXaxis, FUN=length)[,2]
+          ag$n  <- stats::aggregate(vT$dynamics ~ vT$indexXaxis, FUN=length)[,2]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure4=="SD")
@@ -4231,14 +4526,14 @@ visvow <- function()
           if (is.element("average",input$selGeon4))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexPlot=vT$indexPlot, speaker=vT$speaker, vowel=vT$vowel, dynamics=vT$dynamics)
-            vT <- aggregate(dynamics ~ indexXaxis + indexPlot + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(dynamics ~ indexXaxis + indexPlot +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexPlot + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexPlot +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=mean)
-          ag$sd <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=sd)[,3]
+          ag    <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=mean)
+          ag$sd <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=length)[,3]
+          ag$n  <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexPlot, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure4=="SD")
@@ -4288,14 +4583,14 @@ visvow <- function()
           if (is.element("average",input$selGeon4))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexLine=vT$indexLine, speaker=vT$speaker, vowel=vT$vowel, dynamics=vT$dynamics)
-            vT <- aggregate(dynamics ~ indexXaxis + indexLine + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(dynamics ~ indexXaxis + indexLine +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexLine + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexLine +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=mean)
-          ag$sd <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=sd)[,3]
+          ag    <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=mean)
+          ag$sd <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=length)[,3]
+          ag$n  <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure4=="SD")
@@ -4343,14 +4638,14 @@ visvow <- function()
           if (is.element("average",input$selGeon4))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexPlot=vT$indexPlot, indexLine=vT$indexLine, speaker=vT$speaker, vowel=vT$vowel, dynamics=vT$dynamics)
-            vT <- aggregate(dynamics ~ indexXaxis + indexPlot + indexLine + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(dynamics ~ indexXaxis + indexPlot + indexLine +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexPlot + indexLine + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(dynamics ~ indexXaxis + indexPlot + indexLine +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=mean)
-          ag$sd <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=sd)[,4]
+          ag    <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=mean)
+          ag$sd <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=sd)[,4]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=length)[,4]
+          ag$n  <- stats::aggregate(vT$dynamics ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=length)[,4]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure4=="SD")
@@ -4887,14 +5182,14 @@ visvow <- function()
           if (is.element("average",input$selGeon2))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, speaker=vT$speaker, vowel=vT$vowel, duration=vT$duration)
-            vT <- aggregate(duration ~ indexXaxis + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(duration ~ indexXaxis +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$duration ~ vT$indexXaxis, FUN=mean)
-          ag$sd <- aggregate(vT$duration ~ vT$indexXaxis, FUN=sd)[,2]
+          ag    <- stats::aggregate(vT$duration ~ vT$indexXaxis, FUN=mean)
+          ag$sd <- stats::aggregate(vT$duration ~ vT$indexXaxis, FUN=sd)[,2]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$duration ~ vT$indexXaxis, FUN=length)[,2]
+          ag$n  <- stats::aggregate(vT$duration ~ vT$indexXaxis, FUN=length)[,2]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure2=="SD")
@@ -4928,14 +5223,14 @@ visvow <- function()
           if (is.element("average",input$selGeon2))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexPlot=vT$indexPlot, speaker=vT$speaker, vowel=vT$vowel, duration=vT$duration)
-            vT <- aggregate(duration ~ indexXaxis + indexPlot + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(duration ~ indexXaxis + indexPlot +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexPlot + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexPlot +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=mean)
-          ag$sd <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=sd)[,3]
+          ag    <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=mean)
+          ag$sd <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=length)[,3]
+          ag$n  <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexPlot, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure2=="SD")
@@ -4985,14 +5280,14 @@ visvow <- function()
           if (is.element("average",input$selGeon2))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexLine=vT$indexLine, speaker=vT$speaker, vowel=vT$vowel, duration=vT$duration)
-            vT <- aggregate(duration ~ indexXaxis + indexLine + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(duration ~ indexXaxis + indexLine +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexLine + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexLine +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=mean)
-          ag$sd <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=sd)[,3]
+          ag    <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=mean)
+          ag$sd <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=sd)[,3]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=length)[,3]
+          ag$n  <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine, FUN=length)[,3]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure2=="SD")
@@ -5040,14 +5335,14 @@ visvow <- function()
           if (is.element("average",input$selGeon2))
           {
             vT <- data.frame(indexXaxis=vT$indexXaxis, indexPlot=vT$indexPlot, indexLine=vT$indexLine, speaker=vT$speaker, vowel=vT$vowel, duration=vT$duration)
-            vT <- aggregate(duration ~ indexXaxis + indexPlot + indexLine + speaker + vowel, data=vT, FUN=mean)
-            vT <- aggregate(duration ~ indexXaxis + indexPlot + indexLine +           vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexPlot + indexLine + speaker + vowel, data=vT, FUN=mean)
+            vT <- stats::aggregate(duration ~ indexXaxis + indexPlot + indexLine +           vowel, data=vT, FUN=mean)
           }
 
-          ag    <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=mean)
-          ag$sd <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=sd)[,4]
+          ag    <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=mean)
+          ag$sd <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=sd)[,4]
           ag$sd[is.na(ag$sd)] <- 0
-          ag$n  <- aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=length)[,4]
+          ag$n  <- stats::aggregate(vT$duration ~ vT$indexXaxis + vT$indexLine + vT$indexPlot, FUN=length)[,4]
           ag$se <- ag$sd / sqrt(ag$n)
 
           if (input$selMeasure2=="SD")
@@ -5531,25 +5826,25 @@ visvow <- function()
         if (length(input$replyNormal3)==0)
           return(NULL)
 
-        indexVowel <- grep("^vowel$", colnames(vowelScale3()))
-        nColumns   <- ncol(vowelScale3())
-        nPoints    <- (nColumns - (indexVowel + 1))/5
-
         if (!is.null(replyTimesN3()))
           replyTimesN <- replyTimesN3()
         else
           return(NULL)
 
+        indexDuration <- grep("^duration$", tolower(colnames(vowelScale3())))
+        nPoints       <- (ncol(vowelScale3()) - indexDuration) / 5
+
         if (max(replyTimesN) > nPoints)
           replyTimesN <- Round(nPoints/2)
         else {}
         
-        vL1 <- vowelLong1(vowelScale3(),replyTimesN)
+        vL1 <- vowelLong1(vowelScale1(),replyTimesN)
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
         vL4 <- vowelLong4(vL1)
-
-        return(vowelNormF(vowelScale3(),vL1,vL2,vL3,vL4,input$replyNormal3))
+        vLD <- vowelLongD(vL1)
+    
+        return(vowelNormF(vowelScale3(), vL1, vL2, vL3, vL4, vLD, input$replyNormal3))
       })
 
       vowelSubS3 <- reactive(
@@ -5583,7 +5878,7 @@ visvow <- function()
                                          F3      = vT[,indexF3]))
           }
 
-          return(aggregate(cbind(F1,F2,F3)~vowel+speaker+time, data=vT0, FUN=mean))
+          return(stats::aggregate(cbind(F1,F2,F3)~vowel+speaker+time, data=vT0, FUN=mean))
         }
         else
           return(data.frame())
@@ -5766,9 +6061,9 @@ visvow <- function()
             {
               jVec <- subset(vec, speaker==labs[j])$dist
 
-              if ((sd(iVec)>0) && (sd(jVec)>0))
+              if ((stats::sd(iVec)>0) && (stats::sd(jVec)>0))
               {
-                corr[i,j] <- cor(iVec,jVec)
+                corr[i,j] <- stats::cor(iVec,jVec)
               }
               else
                 corr[i,j] <- 0
@@ -5873,7 +6168,7 @@ visvow <- function()
         else
           vowelCor <- vowelCorG()
 
-        if (!is.null(vowelCor) && (nrow(vowelCor)>0) && (sd(vowelCor)>0))
+        if (!is.null(vowelCor) && (nrow(vowelCor)>0) && (stats::sd(vowelCor)>0))
           return(vowelCor)
         else
           return(NULL)
@@ -5898,25 +6193,25 @@ visvow <- function()
         if (is.null(vowelDiff3()) || (nrow(vowelDiff3())==0))
           return(NULL)
         else
-          return(as.dist(vowelDiff3(), diag=FALSE, upper=FALSE))
+          return(stats::as.dist(vowelDiff3(), diag=FALSE, upper=FALSE))
       })
 
       clusObj <- reactive(
       {
         if (input$replyMethod31=="S-L")
-          clus <- hclust(vowelDist3(), method="single")
+          clus <- stats::hclust(vowelDist3(), method="single")
 
         if (input$replyMethod31=="C-L")
-          clus <- hclust(vowelDist3(), method="complete")
+          clus <- stats::hclust(vowelDist3(), method="complete")
 
         if (input$replyMethod31=="UPGMA")
-          clus <- hclust(vowelDist3(), method="average")
+          clus <- stats::hclust(vowelDist3(), method="average")
 
         if (input$replyMethod31=="WPGMA")
-          clus <- hclust(vowelDist3(), method="mcquitty")
+          clus <- stats::hclust(vowelDist3(), method="mcquitty")
 
         if (input$replyMethod31=="Ward")
-          clus <- hclust(vowelDist3(), method="ward.D2")
+          clus <- stats::hclust(vowelDist3(), method="ward.D2")
 
         return(clus)
       })
@@ -5933,7 +6228,7 @@ visvow <- function()
       {
         if (input$replyMethod32=="Classical")
         {
-          fit <- cmdscale(vowelDist3(), eig=TRUE, k=2)
+          fit <- stats::cmdscale(vowelDist3(), eig=TRUE, k=2)
           coords <- as.data.frame(fit$points)
         }
 
@@ -5962,6 +6257,8 @@ visvow <- function()
       {
         if (is.null(vowelTab()))
           return(NULL)
+
+        showExclVow()
 
         timeCode     <- getTimeCode()
         indexVowel   <- grep("^vowel$", colnames(vowelTab()))
@@ -6025,24 +6322,6 @@ visvow <- function()
         selectInput('replyGrouping3', 'Sel. variable:', options, selected = character(0), multiple=TRUE, selectize=FALSE, size=4, width="100%")
       })
 
-      output$exclVow3 <- renderUI(
-      {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
-          return(NULL)
-
-        if ((length(input$replyVowel3)==0) && (length(vowelExcl())>0))
-        {
-          vowels <- ""
-
-          for (i in 1:length(vowelExcl()))
-            vowels <- paste(vowels, vowelExcl()[i])
-
-          return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br><br>"))))
-        }
-        else
-          return(NULL)
-      })
-
       output$catGrouping3 <- renderUI(
       {
         if (is.null(vowelTab()))
@@ -6092,7 +6371,7 @@ visvow <- function()
 
       plotClus <- function()
       {
-        dendro <- dendro_data(as.dendrogram(clusObj()), type = "rectangle")
+        dendro <- dendro_data(stats::as.dendrogram(clusObj()), type = "rectangle")
 
         gp <- ggplot(dendro$segments) +
               geom_segment(aes(x = x, y = y, xend = xend, yend = yend))
@@ -6287,7 +6566,7 @@ visvow <- function()
         for (i in 1:nf)
           dist[i,i] <- 0
 
-        return(as.dist(dist, diag=FALSE, upper=FALSE))
+        return(stats::as.dist(dist, diag=FALSE, upper=FALSE))
       }
 
       output$explVar3 <- renderUI(
@@ -6299,14 +6578,14 @@ visvow <- function()
         {
           if ((length(input$replyMethod31)>0) && (input$selClass3=="Cluster analysis"))
           {
-            explVar <- formatC(x=cor(vowelDist3(), cophenetic(clusObj()))^2, digits = 4, format = "f")
+            explVar <- formatC(x=stats::cor(vowelDist3(), stats::cophenetic(clusObj()))^2, digits = 4, format = "f")
             return(tags$div(HTML(paste0("<font color='black'>","Explained variance: ",explVar,"</font><br><br>"))))
           }
           else
 
           if ((length(input$replyMethod32)>0) && (input$selClass3=="Multidimensional scaling"))
           {
-            explVar <- formatC(x=cor(vowelDist3(), mdsDist(multObj()))^2, digits = 4, format = "f")
+            explVar <- formatC(x=stats::cor(vowelDist3(), mdsDist(multObj()))^2, digits = 4, format = "f")
             return(tags$div(HTML(paste0("<font color='black'>","Explained variance: ",explVar,"</font><br><br>"))))
           }
           else {}
@@ -6480,6 +6759,8 @@ visvow <- function()
         if (is.null(vowelTab()))
           return(NULL)
 
+        showExclVow()
+
         timeCode     <- getTimeCode()
         indexVowel   <- grep("^vowel$", colnames(vowelTab()))
         nColumns     <- ncol(vowelTab())
@@ -6570,24 +6851,6 @@ visvow <- function()
         }
       })
 
-      output$exclVow5 <- renderUI(
-      {
-        if (is.null(vowelTab()) || (nrow(vowelTab())==0))
-          return(NULL)
-
-        if (length(vowelExcl())>0)
-        {
-          vowels <- ""
-
-          for (i in 1:length(vowelExcl()))
-            vowels <- paste(vowels, vowelExcl()[i])
-
-          return(tags$div(HTML(paste0("<font color='black'>","Vowels excluded: ",vowels,"</font><br>"))))
-        }
-        else
-          return(NULL)
-      })
-
       output$getOpts5 <- renderUI(
       {
         req(input$selMeth5)
@@ -6654,15 +6917,14 @@ visvow <- function()
 
       vowelNorm5 <- reactive(
       {
-        indexVowel <- grep("^vowel$", colnames(vowelScale5()))
-        nColumns   <- ncol(vowelScale5())
-        nPoints    <- (nColumns - (indexVowel + 1))/5
-
         if (!is.null(input$replyTimesN5))
           replyTimesN <- input$replyTimesN5
         else
           return(NULL)
 
+        indexDuration <- grep("^duration$", tolower(colnames(vowelScale5())))
+        nPoints       <- (ncol(vowelScale5()) - indexDuration) / 5
+        
         if (max(replyTimesN) > nPoints)
           replyTimesN <- Round(nPoints/2)
         else {}
@@ -6671,8 +6933,9 @@ visvow <- function()
         vL2 <- vowelLong2(vL1)
         vL3 <- vowelLong3(vL1)
         vL4 <- vowelLong4(vL1)
-
-        return(vowelNormF(vowelScale5(), vL1, vL2, vL3, vL4, global$replyNormal5))
+        vLD <- vowelLongD(vL1)
+    
+        return(vowelNormF(vowelScale5(), vL1, vL2, vL3, vL4, vLD, global$replyNormal5))
       })
 
       vowelSubS5 <- reactive(
@@ -6734,7 +6997,7 @@ visvow <- function()
                                          F3      = vT[,indexF3]))
           }
 
-          return(aggregate(cbind(f0,F1,F2,F3)~vowel+speaker+time+vars1+vars2, data=vT0, FUN=mean))
+          return(stats::aggregate(cbind(f0,F1,F2,F3)~vowel+speaker+time+vars1+vars2, data=vT0, FUN=mean))
         }
         else
           return(data.frame())
@@ -6813,7 +7076,7 @@ visvow <- function()
               if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
               {
                 global$replyNormal5 <- Normal[j]
-                
+
                 vT <- vowelSubS5(); if (is.null(vT)) next()
                 
                 # Adank et al. (2004)
@@ -6821,21 +7084,21 @@ visvow <- function()
                 preds <- c()
                 
                 if (!emptyF0() && input$replyF05 && 
-                    (sd(vT$f0) > 0.000001))
+                    (stats::sd(vT$f0) > 0.000001))
                   preds <- cbind(preds, vT$f0)
                 
-                if (sd(vT$F1) > 0.000001) 
+                if (stats::sd(vT$F1) > 0.000001) 
                   preds <- cbind(preds, vT$F1)
                 
-                if (sd(vT$F2) > 0.000001) 
+                if (stats::sd(vT$F2) > 0.000001) 
                   preds <- cbind(preds, vT$F2)
                 
                 if (!emptyF3() && input$replyF35 &&
-                    (sd(vT$F3) > 0.000001))
+                    (stats::sd(vT$F3) > 0.000001))
                   preds <- cbind(preds, vT$F3)
                 
                 model <- lda(factor(vT$vowel)~preds)
-                p <- predict(model)
+                p <- stats::predict(model)
                 yp <- cbind(as.character(vT$vowel), as.character(p$class))
                 matrix1[j,i] <- perc(yp)
                 
@@ -6852,22 +7115,22 @@ visvow <- function()
                     vTsub <- subset(vT, (vowel==Segments$vowel[k]) & (time==Segments$time[k]))
                     
                     if (!emptyF0() && input$replyF05 && 
-                        (sd(vTsub$f0) > 0.000001))
+                        (stats::sd(vTsub$f0) > 0.000001))
                       preds <- cbind(preds, vTsub$f0)
                     
-                    if (sd(vTsub$F1) > 0.000001) 
+                    if (stats::sd(vTsub$F1) > 0.000001) 
                       preds <- cbind(preds, vTsub$F1)
                     
-                    if (sd(vTsub$F2) > 0.000001) 
+                    if (stats::sd(vTsub$F2) > 0.000001) 
                       preds <- cbind(preds, vTsub$F2)
                     
                     if (!emptyF3() && input$replyF35 &&
-                        (sd(vTsub$F3) > 0.000001))
+                        (stats::sd(vTsub$F3) > 0.000001))
                       preds <- cbind(preds, vTsub$F3)
                   }
                   
                   model <- lda(x=preds[, 1:ncol(preds)], grouping=vTsub$vars1)
-                  p <- predict(model)
+                  p <- stats::predict(model)
                   yp <- cbind(as.character(vT$vars1), as.character(p$class))
                   matrix2[j,i] <- perc(yp)
                 }
@@ -6889,21 +7152,21 @@ visvow <- function()
                     preds <- c()
                     
                     if (!emptyF0() && input$replyF05 && 
-                        (sd(vTsub$f0) > 0.000001))
+                        (stats::sd(vTsub$f0) > 0.000001))
                       preds <- cbind(preds, vTsub$f0)
                     
-                    if (sd(vTsub$F1) > 0.000001) 
+                    if (stats::sd(vTsub$F1) > 0.000001) 
                       preds <- cbind(preds, vTsub$F1)
                     
-                    if (sd(vTsub$F2) > 0.000001) 
+                    if (stats::sd(vTsub$F2) > 0.000001) 
                       preds <- cbind(preds, vTsub$F2)
                     
                     if (!emptyF3() && input$replyF35 &&
-                        (sd(vTsub$F3) > 0.000001))
+                        (stats::sd(vTsub$F3) > 0.000001))
                       preds <- cbind(preds, vTsub$F3)
                     
                     model <- lda(factor(vTsub$vars2)~preds)
-                    p <- predict(model)
+                    p <- stats::predict(model)
                     yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
                     Perc <- c(Perc, perc(yp))
                   }
@@ -6947,7 +7210,7 @@ visvow <- function()
                       polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
                     }
                   
-                    fab1[t] <- (sd(area)/mean(area))^2
+                    fab1[t] <- (stats::sd(area)/mean(area))^2
 
                     ##
                   
@@ -7021,6 +7284,8 @@ visvow <- function()
       {
         req(vowelTab())
 
+        showNotification("xxx showResults1", type = "warning", duration = NULL)
+
         Scale  <- unlist(optionsScale())
         Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
 
@@ -7050,9 +7315,9 @@ visvow <- function()
               vT2 <- vowelSubS5()
 
               if (emptyF3() || !input$replyF35)
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+                Cor <- 1-((stats::cor(vT1$F1, vT2$F1) + stats::cor(vT1$F2, vT2$F2))/2)
               else
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+                Cor <- 1-((stats::cor(vT1$F1, vT2$F1) + stats::cor(vT1$F2, vT2$F2) + stats::cor(vT1$F3, vT2$F3))/3)
 
               matrix6[i,j] <- Cor
               matrix6[j,i] <- Cor
@@ -7072,6 +7337,8 @@ visvow <- function()
       {
         req(vowelTab())
 
+        showNotification("xxx showResults2", type = "warning", duration = NULL)
+        
         Scale  <- unlist(optionsScale())
         Normal <- unlist(optionsNormal(vowelTab(), " Hz", !input$replyF05, !input$replyF35))
 
@@ -7101,9 +7368,9 @@ visvow <- function()
               vT2 <- vowelSubS5()
 
               if (emptyF3() || !input$replyF35)
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2))/2)
+                Cor <- 1-((stats::cor(vT1$F1, vT2$F1) + stats::cor(vT1$F2, vT2$F2))/2)
               else
-                Cor <- 1-((cor(vT1$F1, vT2$F1) + cor(vT1$F2, vT2$F2) + cor(vT1$F3, vT2$F3))/3)
+                Cor <- 1-((stats::cor(vT1$F1, vT2$F1) + stats::cor(vT1$F2, vT2$F2) + stats::cor(vT1$F3, vT2$F3))/3)
 
               matrix6[i,j] <- Cor
               matrix6[j,i] <- Cor
@@ -7175,12 +7442,12 @@ visvow <- function()
         req(input$selConv5)
 
         if (input$selConv5=="Scaling")
-          clus <- hclust(as.dist(showResults1()), method="average")
+          clus <- stats::hclust(stats::as.dist(showResults1()), method="average")
 
         if (input$selConv5=="Normalization")
-          clus <- hclust(as.dist(showResults2()), method="average")
+          clus <- stats::hclust(stats::as.dist(showResults2()), method="average")
 
-        dendro <- dendro_data(as.dendrogram(clus), type = "rectangle")
+        dendro <- dendro_data(stats::as.dendrogram(clus), type = "rectangle")
         dendro$labels$label <- paste0("  ", dendro$labels$label)
 
         rownames(dendro$labels) <- 1:nrow(dendro$labels)
@@ -7209,20 +7476,296 @@ visvow <- function()
         if (input$selMeth5=="Evaluate")
         {
           fluidPage(
-            style = "padding:0; margin:0; font-size: 90%",
-            formattableOutput("table5", height="513px")
+            style = "padding:0; margin:0; font-size: 59%; font-family: Ubuntu;",
+            formattableOutput("table5", height="544px")
           )
         }
         else
         {
           fluidPage(
             style = "padding:0; margin:0;",
-            plotOutput("graph5", height="513px")
+            plotOutput("graph5", height="544px")
           )
         }
       })
     }
   )
+}
+
+################################################################################
+
+long2wide <- function(vT, isLong)
+{
+  if (isLong)
+  {
+    timepoint <- vT$timepoint
+    vT$timepoint <- NULL
+    
+    indexDuration <- grep("^duration$", tolower(colnames(vT)))
+    ngroups <- (ncol(vT) - indexDuration) / 5
+    
+    if (ngroups == 1)
+    {
+      freq <- data.frame(table(timepoint))
+      
+      if (mean(freq$Freq) != round(mean(freq$Freq)))
+      {
+        message("The number of time points is not the same for all cases!")
+        return(invisible(NULL))
+      }
+      
+      if (!unique((sort(freq$timepoint) == 1:length(freq$timepoint))))
+      {
+        message("Numbering of time points is not correct!")
+        return(invisible(NULL))
+      }
+      
+      superIndex <- ""
+      
+      for (i in 1:(indexDuration-1))
+      {
+        superIndex <- paste0(superIndex, vT[,i])
+      }
+      
+      ntimepoints <- nrow(freq)
+      
+      if ((nrow(vT)/ntimepoints) > length(unique(superIndex)))
+      {
+        message("Not all cases are uniquely defined!")
+        return(invisible(NULL))
+      }
+      
+      vT <- vT[order(superIndex, timepoint),]
+      
+      df <- dplyr::filter(vT, ((dplyr::row_number() %% ntimepoints)) == 1)
+      df <- df[, 1:indexDuration]
+      
+      for (g in (1:ntimepoints))
+      {
+        if (g==ntimepoints) g0 <- 0 else g0 <- g
+        
+        df0 <- dplyr::filter(vT, ((dplyr::row_number() %% ntimepoints)) == g0)
+        df0 <- df0[, (indexDuration+1):(indexDuration+5)]
+        
+        df <- cbind(df, df0)
+      }
+      
+      return(df)
+    }
+    else
+    {
+      message("Cannot have both a variable timepoint and multiple time points in one row!")
+      return(invisible(NULL))
+    }
+  }
+  else
+    return(vT)
+}
+
+wide2long <- function(vT, isLong)
+{
+  if (isLong)
+  {
+    indexDuration <- grep("^duration$", tolower(colnames(vT)))
+    ngroups       <- (ncol(vT) - indexDuration) / 5
+    
+    vT$index <- 1:nrow(vT)
+    
+    df <- data.frame()
+    
+    for (g in (1:ngroups))
+    {
+      df1 <- vT[,1:2]
+      df1$timepoint <- g
+      df1$index <- vT$index
+      df2 <- vT[,3:indexDuration]
+      
+      first <- indexDuration + ((g-1) * 5) + 1
+      last  <- first + 4
+      
+      df3 <- vT[,first:last]
+      
+      df <- rbind(df, cbind(df1,df2,df3))
+    }
+    
+    df <- df[order(df$index, df$timepoint),]
+    df$index <- NULL
+    
+    return(df)
+  }
+  else
+    return(vT)
+}
+
+#' @name
+#' normalizeFormants
+#'
+#' @title
+#' Normalize vowel formants.
+#' 
+#' @aliases
+#' normalizeFormants
+#'
+#' @description
+#' Scale and/or normalize formants F1, F2 and F3.
+#'
+#' @usage
+#' normalizeFormants(vowelTab, replyScale, replyNormal, replyTimesN)
+#' 
+#' @param 
+#' vowelTab A data frame containing acoustic vowel measurements; the format is described at https://www.visiblevowels.org/#help .
+#' @param
+#' replyScale Choose from: "Hz", "bark I", "bark II", "bark III", "ERB I", "ERB II", "ERB III", "ln", "mel I", "mel II", "ST".
+#' @param
+#' replyNormal Choose from: "none", "Peterson", "Sussman", "Syrdal & Gopal", "Miller", "Thomas & Kendall", "Gerstman", "Lobanov", "Watt & Fabricius", "Fabricius et al.", "Bigham", "Heeringa & Van de Velde I", "Heeringa & Van de Velde II", "Nearey I", "Nearey II", "Barreda & Nearey I", "Barreda & Nearey II", "Labov log-mean I", "Labov log-geomean I", "Labov log-mean II", "Labov log-geomean II", "Johnson".
+#' @param
+#' replyTimesN If measurements are provided for multiple time points per vowel, provide the indices of the time points that should be included when descriptives such as minimum, maximum, mean and standard deviation are calculated by some normalization methods; when there is just one time point, give index 1; a set of multiple indices are given as a vector, for example, when there are three indices and you want the first and third index be used, give c(1,3).
+#' 
+#' @export
+#' normalizeFormants
+NULL
+
+normalizeFormants <- function(vowelTab = data.frame(), replyScale = "Hz", replyNormal = "none", replyTimesN = c())
+{
+  if (nrow(vowelTab) == 0)
+  {
+    message("Error: Input table is missing")
+    return(invisible(NULL))
+  }
+  
+  if (length(replyTimesN) == 0)
+  {
+    message("Error: Vector of indices of descriptive time points are missing")
+    return(invisible(NULL))
+  }
+
+  isLong <- ("timepoint" %in% colnames(vowelTab))
+  vowelTab <- long2wide(vowelTab,isLong)
+  indexDuration <- grep("^duration$", tolower(colnames(vowelTab)))
+  
+  if (indexDuration > 3)
+  {
+    cnames <- colnames(vowelTab)
+    vowelTab <- data.frame(vowelTab[,1], vowelTab[,3:(indexDuration-1)], vowelTab[,2], vowelTab[,indexDuration:ncol(vowelTab)])
+    cnames <- c(cnames[1],cnames[3:(indexDuration-1)],cnames[2],cnames[indexDuration:ncol(vowelTab)])
+    colnames(vowelTab) <- cnames
+  }
+  else {}
+  
+  if ((replyScale=="none") | (replyScale==""))
+    replyScale <- " Hz"
+  else
+    replyScale <- paste0(" ", replyScale)
+
+  vowelScale <- vowelScale(vowelTab, replyScale, 0)
+  
+  vL1 <- vowelLong1(vowelScale,replyTimesN)
+  vL2 <- vowelLong2(vL1)
+  vL3 <- vowelLong3(vL1)
+  vL4 <- vowelLong4(vL1)
+  vLD <- vowelLongD(vL1)
+  
+  if ((replyNormal=="none") | (replyNormal==""))
+    replyNormal <- ""
+  else
+    
+  if  (replyNormal=="Labov log-mean I")
+    replyNormal <- " Labov 1"
+  else
+    
+  if  (replyNormal=="Labov log-geomean I")
+    replyNormal <- " LABOV 1"
+  else
+    
+  if  (replyNormal=="Labov log-mean II")
+    replyNormal <- " Labov 2"
+  else
+    
+  if  (replyNormal=="Labov log-geomean II")
+    replyNormal <- " LABOV 2"
+  else
+    replyNormal <- paste0(" ", replyNormal)
+  
+  vowelTab <- vowelNormF(vowelScale, vL1, vL2, vL3, vL4, vLD, replyNormal)
+  
+  if (indexDuration > 3)
+  {
+    cnames <- colnames(vowelTab)
+    vowelTab <- data.frame(vowelTab[,1], vowelTab[,indexDuration-1], vowelTab[,2:(indexDuration-2)], vowelTab[,indexDuration:ncol(vowelTab)])
+    cnames <- c(cnames[1], cnames[indexDuration-1], cnames[2:(indexDuration-2)], cnames[indexDuration:ncol(vowelTab)])
+    colnames(vowelTab) <- cnames
+  }
+  else {}  
+  
+  vowelTab <- wide2long(vowelTab, isLong)
+
+  return(vowelTab)
+}
+
+#' @name
+#' normalizeDuration
+#'
+#' @title
+#' Normalize duration
+#' 
+#' @aliases 
+#' normalizeDuration
+#'
+#' @description
+#' Normalize duration of vowels.
+#'
+#' @usage
+#' normalizeDuration(vowelTab, replyNormal)
+#' 
+#' @param 
+#' vowelTab A data frame containing acoustic vowel measurements; the format is described at https://www.visiblevowels.org/#help .
+#' @param
+#' replyNormal Choose from: "none", "Lobanov".
+#' 
+#' @export
+#' normalizeDuration
+NULL
+
+normalizeDuration <- function(vowelTab = data.frame(), replyNormal = "")
+{
+  if (nrow(vowelTab) == 0)
+  {
+    message("Error: Input table is missing")
+    return(invisible(NULL))
+  }
+  
+  isLong <- ("timepoint" %in% colnames(vowelTab))
+  vowelTab <- long2wide(vowelTab,isLong)
+  indexDuration <- grep("^duration$", tolower(colnames(vowelTab)))
+  
+  if (indexDuration > 3)
+  {
+    cnames <- colnames(vowelTab)
+    vowelTab <- data.frame(vowelTab[,1], vowelTab[,3:(indexDuration-1)], vowelTab[,2], vowelTab[,indexDuration:ncol(vowelTab)])
+    cnames <- c(cnames[1],cnames[3:(indexDuration-1)],cnames[2],cnames[indexDuration:ncol(vowelTab)])
+    colnames(vowelTab) <- cnames
+  }
+  else {}  
+  
+  if ((replyNormal=="none") | (replyNormal==""))
+    replyNormal <- ""
+  else
+    replyNormal <- paste0(" ", replyNormal)
+  
+  vowelTab <- vowelNormD(vowelTab,replyNormal)
+  
+  if (indexDuration > 3)
+  {
+    cnames <- colnames(vowelTab)
+    vowelTab <- data.frame(vowelTab[,1], vowelTab[,indexDuration-1], vowelTab[,2:(indexDuration-2)], vowelTab[,indexDuration:ncol(vowelTab)])
+    cnames <- c(cnames[1], cnames[indexDuration-1], cnames[2:(indexDuration-2)], cnames[indexDuration:ncol(vowelTab)])
+    colnames(vowelTab) <- cnames
+  }
+  else {}
+
+  vowelTab <- wide2long(vowelTab, isLong)
+  
+  return(vowelTab)
 }
 
 ################################################################################

@@ -13,6 +13,9 @@ filename <- function(options)
   options <- gsub(" "     , "_" , options, fixed=TRUE)
   options <- gsub("\u00FC", "ue", options, fixed=TRUE)
   
+  if (options=="_LABOV_I")  options <- " Labov-I"
+  if (options=="_LABOV_II") options <- " Labov-II"
+  
   return(options)
 }
 
@@ -59,6 +62,7 @@ vL1 <- vowelLong1(vowelTab,replyTimesN)
 vL2 <- vowelLong2(vL1)
 vL3 <- vowelLong3(vL1)
 vL4 <- vowelLong4(vL1)
+vLD <- vowelLongD(vL1)
 
 NormsF <- c("",
             " Peterson",
@@ -75,14 +79,19 @@ NormsF <- c("",
             " Heeringa & Van de Velde II",
             " Nearey I",
             " Nearey II",
+            " Barreda & Nearey I",
+            " Barreda & Nearey II",
             " Labov I",
-            " Labov II")
+            " LABOV I",
+            " Labov II",
+            " LABOV II",
+            " Johnson")
 
 for (i in 1:length(NormsF))
 {
   fn <- substr(filename(NormsF[i]), 2, nchar(NormsF[i]))
   vowelNorm11 <- read.table(paste0("data/", fn, "F.csv"), header = TRUE, sep = "\t")
-  vowelNorm12 <- vowelNormF(vowelTab, vL1, vL2, vL3, vL4, NormsF[i])
+  vowelNorm12 <- vowelNormF(vowelTab, vL1, vL2, vL3, vL4, vLD, NormsF[i])
 
   for (j in (1:nrow(vowelNorm11)))
   {

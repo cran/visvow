@@ -27,12 +27,6 @@ See Johnson (2012).
 \details{
 \code{visvow()} opens Visible Vowels in your default web browser.
 }
-\examples{
-if (interactive()){
-  visvow()
-}
-
-}
 \references{
 \insertRef{johnson:2012}{visvow}
 }
