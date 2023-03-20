@@ -3716,7 +3716,7 @@ visvow <- function()
 
           if (input$geon3)
           {
-            chulls <- plyr::ddply(vT, .(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
+            chulls <- plyr::ddply(vT, plyr::.(color,plot), function(df) df[grDevices::chull(df$X, df$Y), ])
 
             if ((length(unique(vT$color))==1) | (as.character(input$replyColor1)[1]=="vowel"))
             {
