@@ -45,7 +45,7 @@
 #' shiny shinyBS tidyr PBSmapping ggplot2 plot3D MASS ggdendro ggrepel readxl WriteXLS pracma Rtsne grid svglite Cairo tikzDevice shinybusy
 #' 
 #' @importFrom 
-#' stats sd predict
+#' stats sd predict aov manova
 #'
 #' @importFrom
 #' formattable renderFormattable formattable formatter style color_tile formattableOutput
@@ -55,6 +55,9 @@
 #' 
 #' @importFrom 
 #' plyr .
+#'
+#' @importFrom
+#' effectsize eta_squared
 #' 
 #' @importFrom
 #' Rdpack reprompt
@@ -1175,7 +1178,7 @@ visvow <- function()
 
       tags$style(type = 'text/css', '#heartbeat { width: 0; height: 0; visibility: hidden; }'),
 
-      img(src = 'FA1.png', height = 39, align = "right", style = 'margin-top: 19px; margin-right: 15px;'),
+      img(src = 'www/FA1.png', height = 39, align = "right", style = 'margin-top: 19px; margin-right: 15px;'),
       titlePanel(title = HTML("<div class='title'>Visible Vowels<div>"), windowTitle = "Visible Vowels"),
 
       tags$head(
@@ -6894,17 +6897,17 @@ visvow <- function()
       output$getOpts5 <- renderUI(
       {
         req(input$selMeth5)
-
+ 
         if (input$selMeth5=="Evaluate")
         {
-          return(radioButtons(inputId  = 'selAuth5',
-                              label    = 'Author:',
-                              choices  = c("Adank et al. (2004)",
-                                           "Fabricius et al. (2009)"),
-                              selected =   "Adank et al. (2004)",
+          return(radioButtons(inputId  = 'selProc5',
+                              label    = 'Procedure:',
+                              choices  = c("Adank et al. (2004) LDA",
+                                           "Adank et al. (2004) MANOVA"),
+                              selected =   "Adank et al. (2004) LDA",
                               inline   = FALSE))
         }
-
+ 
         if (input$selMeth5=="Compare")
         {
           return(radioButtons(inputId  = 'selConv5',
@@ -6918,26 +6921,13 @@ visvow <- function()
 
       output$getEval5 <- renderUI(
       {
-        req(input$selAuth5)
-
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Adank et al. (2004)"))
+        if (input$selMeth5=="Evaluate")
         {
           return(radioButtons(inputId  = 'selEval52',
                               label    = 'Method:',
                               choices  = c("preserve phonemic variation",
                                            "minimize anatomic variation",
                                            "preserve sociolinguistic variation",
-                                           "all"),
-                              selected =   "all",
-                              inline   = FALSE))
-        }
-        
-        if ((input$selMeth5=="Evaluate") & (input$selAuth5=="Fabricius et al. (2009)"))
-        {
-          return(radioButtons(inputId  = 'selEval51',
-                              label    = 'Method:',
-                              choices  = c("equalize vowel space areas",
-                                           "improve vowel space overlap",
                                            "all"),
                               selected =   "all",
                               inline   = FALSE))
@@ -7092,16 +7082,16 @@ visvow <- function()
       {
         req(vowelTab())
 
-        if ((length(input$replyF05) == 0) || (!input$replyF05))
-          replyF05 <- F
-        else
+        if ((!emptyF0()) && (input$replyF05))
           replyF05 <- T
-        
-        if ((length(input$replyF35) == 0) || (!input$replyF35))
-          replyF35 <- F
         else
+          replyF05 <- F
+        
+        if ((!emptyF3()) && (input$replyF35))
           replyF35 <- T
-
+        else
+          replyF35 <- F
+        
         Scale  <- unlist(optionsScale())
         Normal <- unlist(optionsNormal(vowelTab(), " Hz", !replyF05, !replyF35))
 
@@ -7115,7 +7105,8 @@ visvow <- function()
                               " Fabricius et al.",
                               " Bigham",
                               " Heeringa & Van de Velde I" ,
-                              " Heeringa & Van de Velde II")
+                              " Heeringa & Van de Velde II",
+                              " Johnson")
 
         matrix1  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         matrix2  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
@@ -7124,6 +7115,7 @@ visvow <- function()
         matrix5  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         matrix6  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         matrix7  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
+        matrix8  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         
          loop <- 0
         nLoop <- (length(Scale)-1) * length(Normal)
@@ -7142,14 +7134,12 @@ visvow <- function()
               if ((Scale[i]==" Hz") | is.element(Normal[j], allScalesAllowed))
               {
                 global$replyNormal5 <- Normal[j]
-
                 vT <- vowelSubS5(); if (is.null(vT)) next()
-                
-                # Adank et al. (2004)
                 
                 if (length(unique(vT$vowel)) > 1)
                 {
                   m1 <- 0
+                  m2 <- 0
                   times <- sort(unique(vT$time))
                   
                   for (k in 1:length(times))
@@ -7157,7 +7147,7 @@ visvow <- function()
                     vTsub <- subset(vT, time==times[k])
                     preds <- c()
                     
-                    if (!emptyF0() && input$replyF05 && 
+                    if (!emptyF0() && input$replyF05 &&
                        (sd(vTsub$f0) > 0.000001))
                       preds <- cbind(preds, vTsub$f0)
                     
@@ -7175,22 +7165,39 @@ visvow <- function()
                     p <- predict(model)
                     yp <- cbind(as.character(vTsub$vowel), as.character(p$class))
                     m1 <- m1 + perc(yp)
+
+                    if (ncol(preds) == 1)
+                    {
+                      model <- aov   (preds~factor(vTsub$vowel))
+                      m2 <- m2 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
+                    }
+                    else 
+                      
+                    if ((!replyF35) | (Normal[j]!=" Sussman"))
+                    {
+                      model <- manova(preds~factor(vTsub$vowel))
+                      m2 <- m2 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
+                    }
+                    else 
+                      m2 <- NA
                   }
                   
                   matrix1[j,i] <- m1/length(times)
+                  matrix2[j,i] <- m2/length(times)
                 }
-                
+
                 if (length(unique(vT$vars1)) > 1)
                 {
-                  m2 <- 0
+                  m3 <- 0
+                  m4 <- 0
                   voweltimes <- unique(data.frame(vowel=vT$vowel, time=vT$time))
                   
                   for (k in 1:nrow(voweltimes))
                   {
                     vTsub <- subset(vT, (vowel==voweltimes$vowel[k]) & (time==voweltimes$time[k]))
                     preds <- c()
-                    
-                    if (!emptyF0() && input$replyF05 && 
+
+                    if (!emptyF0() && input$replyF05 &&
                        (sd(vTsub$f0) > 0.000001))
                       preds <- cbind(preds, vTsub$f0)
                     
@@ -7201,29 +7208,46 @@ visvow <- function()
                       preds <- cbind(preds, vTsub$F2)
                     
                     if (!emptyF3() && input$replyF35 &&
-                       (sd(vTsub$F3) > 0.000001))
+                        (sd(vTsub$F3) > 0.000001))
                       preds <- cbind(preds, vTsub$F3)
                     
                     model <- lda(factor(vTsub$vars1)~preds)
                     p <- predict(model)
                     yp <- cbind(as.character(vTsub$vars1), as.character(p$class))
-                    m2 <- m2 + perc(yp)
+                    m3 <- m3 + perc(yp)
+                    
+                    if (ncol(preds) == 1)
+                    {
+                      model <- aov   (preds~factor(vTsub$vars1))
+                      m4 <- m4 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
+                    }
+                    else
+                      
+                    if ((!replyF35) | (Normal[j]!=" Sussman"))
+                    {
+                      model <- manova(preds~factor(vTsub$vars1))
+                      m4 <- m4 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
+                    }
+                    else
+                      m4 <- NA
                   }
                   
-                  matrix2[j,i] <- m2/nrow(voweltimes)
+                  matrix3[j,i] <- m3/nrow(voweltimes)
+                  matrix4[j,i] <- m4/nrow(voweltimes)
                 }
-                
+
                 if (length(unique(vT$vars2)) > 1)
                 {
-                  m3 <- 0
+                  m5 <- 0
+                  m6 <- 0
                   voweltimes <- unique(data.frame(vowel=vT$vowel, time=vT$time))
-                  
+
                   for (k in 1:nrow(voweltimes))
                   {
                     vTsub <- subset(vT, (vowel==voweltimes$vowel[k]) & (time==voweltimes$time[k]))
                     preds <- c()
                     
-                    if (!emptyF0() && input$replyF05 && 
+                    if (!emptyF0() && input$replyF05 &&
                        (sd(vTsub$f0) > 0.000001))
                       preds <- cbind(preds, vTsub$f0)
                     
@@ -7234,82 +7258,36 @@ visvow <- function()
                       preds <- cbind(preds, vTsub$F2)
                     
                     if (!emptyF3() && input$replyF35 &&
-                       (sd(vTsub$F3) > 0.000001))
+                        (sd(vTsub$F3) > 0.000001))
                       preds <- cbind(preds, vTsub$F3)
                     
                     model <- lda(factor(vTsub$vars2)~preds)
                     p <- predict(model)
                     yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
-                    m3 <- m3 + perc(yp)
-                  }
-                  
-                  matrix3[j,i] <- m3/nrow(voweltimes)
-                }
-                
-                matrix6[j,i] <- mean(c(matrix1[j,i], 100-matrix2[j,i], matrix3[j,i]), na.rm = TRUE)
-
-                # Fabricius et al. (2009)
-
-                if ((length(input$replyF05) == 0) || (!input$replyF05))
-                  replyF05 <- F
-                else
-                  replyF05 <- T
-                
-                if ((length(input$replyF35) == 0) || (!input$replyF35))
-                  replyF35 <- F
-                else
-                  replyF35 <- T
-
-                if (!replyF05 & !replyF35)
-                {
-                  fab1 <- rep(NA, length(input$replyTimes5))
-                  fab2 <- rep(NA, length(input$replyTimes5))
-              
-                  for (t in (1:length(input$replyTimes5)))
-                  {
-                    speakers <- unique(vT$speaker)
-              
-                    area <- c()
-                    polySet <- data.frame()
-
-                    for (k in 1:length(speakers))
+                    m5 <- m5 + perc(yp)
+                    
+                    if (ncol(preds) == 1)
                     {
-                      vTsub <- subset(vT, (speaker==speakers[k]) & (time==t))
-                  
-                      indices <- grDevices::chull(vTsub$F1, vTsub$F2)
-                      area <- c(area, abs(polyarea(vTsub$F1[indices], vTsub$F2[indices])))
-                  
-                      polySet <- rbind(polySet, asPolySet(data.frame(X=vTsub$F1[indices], Y=vTsub$F2[indices]), k))
+                      model <- aov   (preds~factor(vTsub$vars2))
+                      m6 <- m6 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
                     }
-                  
-                    fab1[t] <- (stats::sd(area)/mean(area))^2
-
-                    ##
-                  
-                    inter <- joinPolys(polySet, operation="INT"  )
-                    union <- joinPolys(polySet, operation="UNION")
-                  
-                    areaI <- abs(polyarea(inter$X, inter$Y))
-                    areaU <- abs(polyarea(union$X, union$Y))
-                  
-                    fab2[t] <- areaI / areaU
+                    else
+                      
+                    if ((!replyF35) | (Normal[j]!=" Sussman"))
+                    {
+                      model <- manova(preds~factor(vTsub$vars2))
+                      m6 <- m6 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
+                    }
+                    else
+                      m6 <- NA
                   }
-
-                  if ((i==1) & (j==1))
-                    fab10 <- fab1
-
-                  fab1 <- 1 - (fab1/fab10)
-
-                  matrix4[j,i] <- mean(fab1)
-                  matrix5[j,i] <- mean(fab2)
-                  matrix7[j,i] <- mean(c(matrix4[j,i], matrix5[j,i]), na.rm = TRUE)
+                  
+                  matrix5[j,i] <- m5/nrow(voweltimes)
+                  matrix6[j,i] <- m6/nrow(voweltimes)
                 }
-                else
-                {
-                  matrix4[j,i] <- NA
-                  matrix5[j,i] <- NA
-                  matrix7[j,i] <- NA
-                }
+
+                matrix7[j,i] <- mean(c(matrix1[j,i], 100-matrix3[j,i], matrix5[j,i]), na.rm = TRUE)
+                matrix8[j,i] <- mean(c(matrix2[j,i], 100-matrix4[j,i], matrix6[j,i]), na.rm = TRUE)
               }
             }
           }
@@ -7322,23 +7300,24 @@ visvow <- function()
         matrix5 <- formatMatrix(matrix5, Scale, Normal)
         matrix6 <- formatMatrix(matrix6, Scale, Normal)
         matrix7 <- formatMatrix(matrix7, Scale, Normal)
+        matrix8 <- formatMatrix(matrix8, Scale, Normal)
         
-        return(list(matrix1, matrix2, matrix3, matrix4, matrix5, matrix6, matrix7))
+        return(list(matrix1, matrix2, matrix3, matrix4, matrix5, matrix6, matrix7, matrix8))
       })
 
       showResults1 <- eventReactive(input$getEval,
       {
         req(vowelTab())
 
-        if ((length(input$replyF05) == 0) || (!input$replyF05))
-          replyF05 <- F
-        else
+        if ((!emptyF0()) && (input$replyF05))
           replyF05 <- T
-        
-        if ((length(input$replyF35) == 0) || (!input$replyF35))
-          replyF35 <- F
         else
+          replyF05 <- F
+        
+        if ((!emptyF3()) && (input$replyF35))
           replyF35 <- T
+        else
+          replyF35 <- F
         
         Scale  <- unlist(optionsScale())
         Normal <- unlist(optionsNormal(vowelTab(), " Hz", !replyF05, !replyF35))
@@ -7391,15 +7370,15 @@ visvow <- function()
       {
         req(vowelTab())
 
-        if ((length(input$replyF05) == 0) || (!input$replyF05))
-          replyF05 <- F
-        else
+        if ((!emptyF0()) && (input$replyF05))
           replyF05 <- T
-        
-        if ((length(input$replyF35) == 0) || (!input$replyF35))
-          replyF35 <- F
         else
+          replyF05 <- F
+        
+        if ((!emptyF3()) && (input$replyF35))
           replyF35 <- T
+        else
+          replyF35 <- F
         
         Scale  <- unlist(optionsScale())
         Normal <- unlist(optionsNormal(vowelTab(), " Hz", !replyF05, !replyF35))
@@ -7452,64 +7431,67 @@ visvow <- function()
       {
         if (length(unique(vowelTab()$speaker)) < 2)
           return(NULL)
-        
-        if (input$selAuth5=="Fabricius et al. (2009)")
-          req(input$selEval51)
-
-        if (input$selAuth5=="Adank et al. (2004)")
-          req(input$selEval52)
-
+  
+        req(evalResults())
+            
         df <- data.frame()
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve phonemic variation"))
+  
+        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "preserve phonemic variation"))
         {
           df <- evalResults()[[1]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "minimize anatomic variation"))
+  
+        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "minimize anatomic variation"))
         {
-          df <- evalResults()[[2]]
+          df <- evalResults()[[3]]
           col1 <- "yellow"
           col2 <- "turquoise"
         }
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "preserve sociolinguistic variation"))
-        {
-          df <- evalResults()[[3]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Adank et al. (2004)") && (input$selEval52 == "all"))
-        {
-          df <- evalResults()[[6]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "equalize vowel space areas"))
-        {
-          df <- evalResults()[[4]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "improve vowel space overlap"))
+  
+        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "preserve sociolinguistic variation"))
         {
           df <- evalResults()[[5]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
-
-        if ((input$selAuth5=="Fabricius et al. (2009)") && (input$selEval51 == "all"))
+  
+        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "all"))
         {
           df <- evalResults()[[7]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
-
+        
+        if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "preserve phonemic variation"))
+        {
+          df <- evalResults()[[2]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+        
+        if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "minimize anatomic variation"))
+        {
+          df <- evalResults()[[4]]
+          col1 <- "yellow"
+          col2 <- "turquoise"
+        }
+        
+        if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "preserve sociolinguistic variation"))
+        {
+          df <- evalResults()[[6]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+        
+        if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "all"))
+        {
+          df <- evalResults()[[8]]
+          col1 <- "turquoise"
+          col2 <- "yellow"
+        }
+  
         formattable(df, align = rep("l", 11), list(formattable::area() ~ color_tile(col1, col2)))
       })
 
