@@ -58,6 +58,9 @@
 #'
 #' @importFrom
 #' effectsize eta_squared
+#'
+#' @importFrom
+#' vegan adonis2
 #' 
 #' @importFrom
 #' Rdpack reprompt
@@ -120,7 +123,7 @@ Scale <- function(h,replyScale,Ref)
 
   if (replyScale==" mel II")
   {
-    s <-1127 * log(1 + (h/700))
+    s <- 1127 * log(1 + (h/700))
   }
 
   if (replyScale==" ST")
@@ -1064,7 +1067,7 @@ optionsNormal <- function(vowelTab, replyScale, noSelF0, noSelF3)
   if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
     options4 <- c(options4, "Labov (2006) log-geomean II" = " LABOV II")
   
-  if (nonEmptyF3 & noSelF0 & (replyScale==" Hz"))
+  if (nonEmptyF3 & noSelF0)
     options4 <- c(options4, "Johnson (2018)" = " Johnson")
   
   ###
@@ -2667,7 +2670,7 @@ visvow <- function()
             Geom_Point <- geom_point(colour="indianred2", size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=1)) +
-                         geom_line(data=vS, colour="indianred2", size=1) +
+                         geom_line(data=vS, colour="indianred2", linewidth=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(ymin=ll, ymax=ul), alpha=0.2) +
                          ggtitle(input$title0) +
@@ -2710,7 +2713,7 @@ visvow <- function()
             Geom_Point <- geom_point(colour="indianred2", size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=1)) +
-                         geom_line(data=vS, colour="indianred2", size=1) +
+                         geom_line(data=vS, colour="indianred2", linewidth=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(ymin=ll, ymax=ul), alpha=0.2) +
                          ggtitle(input$title0) +
@@ -2754,7 +2757,7 @@ visvow <- function()
             Geom_Point <- geom_point(size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=l, color=l)) +
-                         geom_line(data=vS, size=1) +
+                         geom_line(data=vS, linewidth=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(x=x, ymin=ll, ymax=ul, fill = l), alpha=0.2, colour=NA) +
                          ggtitle(input$title0) +
@@ -2808,7 +2811,7 @@ visvow <- function()
             Geom_Point <- geom_point(size=0)
 
           graphics::plot(ggplot(data=vT, aes(x, y, group=l, color=l)) +
-                         geom_line(data=vS, size=1) +
+                         geom_line(data=vS, linewidth=1) +
                          Geom_Point +
                          geom_ribbon(data=vS, aes(x=x, ymin=ll, ymax=ul, fill = l), alpha=0.2, colour=NA) +
                          ggtitle(input$title0) +
@@ -3573,6 +3576,11 @@ visvow <- function()
         if (is.null(vowelSub1()) || (nrow(vowelSub1())==0) | (length(replyTimes1())==0))
           return(NULL)
 
+        if (input$replyNormal1=="")
+          scaleNormalLab <- scaleLab1()
+        else
+          scaleNormalLab <- trimws(input$replyNormal1, "left")
+
         if ((length(replyTimes1())==1) && (!(input$geon2 | input$geon3 | input$geon4 | input$geon5)) && (input$axisZ=="--"))
         {
           vT <- vowelSub1()
@@ -3620,20 +3628,20 @@ visvow <- function()
               Basis <- Basis + geom_point(size=2.5)
           }
   
-          if (!input$geon1)
-              Basis <- Basis + labs(colour=paste(input$replyColor1, collapse = " "), shape=paste(input$replyShape1, collapse = " "))
-            else
-              Basis <- Basis + guides(colour="none") + labs(shape=paste(input$replyShape1, collapse = " "))    
+          if (input$geon1 & (!is.null(input$replyColor1) && (length(input$replyColor1)==1) && (input$replyColor1=="vowel")))
+            Basis <- Basis + guides(colour="none") + labs(shape=paste(input$replyShape1, collapse = " "))
+          else
+            Basis <- Basis + labs(colour=paste(input$replyColor1, collapse = " "), shape=paste(input$replyShape1, collapse = " "))
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
           }
           else
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  )
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right")
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  )
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right")
           }
 
           if (length(input$catPlot1)>0)
@@ -3803,13 +3811,13 @@ visvow <- function()
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
           }
           else
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  )
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right")
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  )
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right")
           }
 
           if (length(input$catPlot1)>0)
@@ -3866,13 +3874,13 @@ visvow <- function()
 
           if ((length(input$selManual)>0) && (input$selManual==TRUE))
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  , limits = c(input$replyXmax, input$replyXmin))
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right", limits = c(input$replyYmax, input$replyYmin))
           }
           else
           {
-            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"), position="top"  )
-            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"), position="right")
+            scaleX <- scale_x_reverse(name=paste0(input$axisX," (",scaleNormalLab,")"), position="top"  )
+            scaleY <- scale_y_reverse(name=paste0(input$axisY," (",scaleNormalLab,")"), position="right")
           }
 
           if (length(input$catPlot1)>0)
@@ -4013,9 +4021,9 @@ visvow <- function()
                     cex.lab  = Point,
                     cex.axis = Point,
                     main     = input$title1,
-                    xlab     = paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"),
-                    ylab     = paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"),
-                    zlab     = paste0(input$axisZ," (",scaleLab1(),input$replyNormal1,")"),
+                    xlab     = paste0(input$axisX," (",scaleNormalLab,")"),
+                    ylab     = paste0(input$axisY," (",scaleNormalLab,")"),
+                    zlab     = paste0(input$axisZ," (",scaleNormalLab,")"),
                     add      = FALSE)
 
           scatter3D(x        = vT$X,
@@ -4164,9 +4172,9 @@ visvow <- function()
                     cex.lab  = Point,
                     cex.axis = Point,
                     alpha    = 0.2,
-                    xlab     = paste0(input$axisX," (",scaleLab1(),input$replyNormal1,")"),
-                    ylab     = paste0(input$axisY," (",scaleLab1(),input$replyNormal1,")"),
-                    zlab     = paste0(input$axisZ," (",scaleLab1(),input$replyNormal1,")"),
+                    xlab     = paste0(input$axisX," (",scaleNormalLab,")"),
+                    ylab     = paste0(input$axisY," (",scaleNormalLab,")"),
+                    zlab     = paste0(input$axisZ," (",scaleNormalLab,")"),
                     add      = FALSE)
 
           nTimes <- length(unique(vT$time))
@@ -6144,7 +6152,7 @@ visvow <- function()
 
         labs <- unique(vT$speaker)
 
-        if (length(labs)<5)
+        if (length(labs)<3)
           return(NULL)
 
         return(vowelCorS()[labs,labs])
@@ -6164,7 +6172,7 @@ visvow <- function()
         labs <- unique(vT$grouping)
         nl <- length(labs)
 
-        if (length(labs)<5)
+        if (length(labs)<3)
           return(NULL)
 
         corr <- matrix(0, nrow = nl, ncol = nl)
@@ -6927,9 +6935,8 @@ visvow <- function()
                               label    = 'Method:',
                               choices  = c("preserve phonemic variation",
                                            "minimize anatomic variation",
-                                           "preserve sociolinguistic variation",
-                                           "all"),
-                              selected =   "all",
+                                           "preserve sociolinguistic variation"),
+                              selected =   "preserve phonemic variation",
                               inline   = FALSE))
         }
       })
@@ -7114,8 +7121,6 @@ visvow <- function()
         matrix4  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         matrix5  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         matrix6  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix7  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
-        matrix8  <- matrix(NA, nrow = length(Normal), ncol = (length(Scale)-1))
         
          loop <- 0
         nLoop <- (length(Scale)-1) * length(Normal)
@@ -7166,20 +7171,8 @@ visvow <- function()
                     yp <- cbind(as.character(vTsub$vowel), as.character(p$class))
                     m1 <- m1 + perc(yp)
 
-                    if (ncol(preds) == 1)
-                    {
-                      model <- aov   (preds~factor(vTsub$vowel))
-                      m2 <- m2 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
-                    }
-                    else 
-                      
-                    if ((!replyF35) | (Normal[j]!=" Sussman"))
-                    {
-                      model <- manova(preds~factor(vTsub$vowel))
-                      m2 <- m2 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
-                    }
-                    else 
-                      m2 <- NA
+                    model <- vegan::adonis2(preds~factor(vTsub$vowel), permutations = 99, method="euclidean", na.rm=TRUE)
+                    m2 <- m2 + (100 * model$R2[1])
                   }
                   
                   matrix1[j,i] <- m1/length(times)
@@ -7216,22 +7209,10 @@ visvow <- function()
                     yp <- cbind(as.character(vTsub$vars1), as.character(p$class))
                     m3 <- m3 + perc(yp)
                     
-                    if (ncol(preds) == 1)
-                    {
-                      model <- aov   (preds~factor(vTsub$vars1))
-                      m4 <- m4 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
-                    }
-                    else
-                      
-                    if ((!replyF35) | (Normal[j]!=" Sussman"))
-                    {
-                      model <- manova(preds~factor(vTsub$vars1))
-                      m4 <- m4 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
-                    }
-                    else
-                      m4 <- NA
+                    model <- vegan::adonis2(preds~factor(vTsub$vars1), permutations = 99, method="euclidean", na.rm=TRUE)
+                    m4 <- m4 + (100 * model$R2[1])
                   }
-                  
+      
                   matrix3[j,i] <- m3/nrow(voweltimes)
                   matrix4[j,i] <- m4/nrow(voweltimes)
                 }
@@ -7266,28 +7247,13 @@ visvow <- function()
                     yp <- cbind(as.character(vTsub$vars2), as.character(p$class))
                     m5 <- m5 + perc(yp)
                     
-                    if (ncol(preds) == 1)
-                    {
-                      model <- aov   (preds~factor(vTsub$vars2))
-                      m6 <- m6 + (100 * effectsize::eta_squared(model, partial = F)$Eta2)
-                    }
-                    else
-                      
-                    if ((!replyF35) | (Normal[j]!=" Sussman"))
-                    {
-                      model <- manova(preds~factor(vTsub$vars2))
-                      m6 <- m6 + (100 * effectsize::eta_squared(model, partial = T)$Eta2_partial)
-                    }
-                    else
-                      m6 <- NA
+                    model <- vegan::adonis2(preds~factor(vTsub$vars2), permutations = 99, method="euclidean", na.rm=TRUE)
+                    m6 <- m6 + (100 * model$R2[1])
                   }
                   
                   matrix5[j,i] <- m5/nrow(voweltimes)
                   matrix6[j,i] <- m6/nrow(voweltimes)
                 }
-
-                matrix7[j,i] <- mean(c(matrix1[j,i], 100-matrix3[j,i], matrix5[j,i]), na.rm = TRUE)
-                matrix8[j,i] <- mean(c(matrix2[j,i], 100-matrix4[j,i], matrix6[j,i]), na.rm = TRUE)
               }
             }
           }
@@ -7299,10 +7265,8 @@ visvow <- function()
         matrix4 <- formatMatrix(matrix4, Scale, Normal)
         matrix5 <- formatMatrix(matrix5, Scale, Normal)
         matrix6 <- formatMatrix(matrix6, Scale, Normal)
-        matrix7 <- formatMatrix(matrix7, Scale, Normal)
-        matrix8 <- formatMatrix(matrix8, Scale, Normal)
         
-        return(list(matrix1, matrix2, matrix3, matrix4, matrix5, matrix6, matrix7, matrix8))
+        return(list(matrix1, matrix2, matrix3, matrix4, matrix5, matrix6))
       })
 
       showResults1 <- eventReactive(input$getEval,
@@ -7436,34 +7400,27 @@ visvow <- function()
             
         df <- data.frame()
   
-        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "preserve phonemic variation"))
+        if ((input$selProc5=="Adank et al. (2004) LDA")    && (input$selEval52 == "preserve phonemic variation"))
         {
           df <- evalResults()[[1]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
   
-        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "minimize anatomic variation"))
+        if ((input$selProc5=="Adank et al. (2004) LDA")    && (input$selEval52 == "minimize anatomic variation"))
         {
           df <- evalResults()[[3]]
           col1 <- "yellow"
           col2 <- "turquoise"
         }
   
-        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "preserve sociolinguistic variation"))
+        if ((input$selProc5=="Adank et al. (2004) LDA")    && (input$selEval52 == "preserve sociolinguistic variation"))
         {
           df <- evalResults()[[5]]
           col1 <- "turquoise"
           col2 <- "yellow"
         }
   
-        if ((input$selProc5=="Adank et al. (2004) LDA") && (input$selEval52 == "all"))
-        {
-          df <- evalResults()[[7]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-        
         if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "preserve phonemic variation"))
         {
           df <- evalResults()[[2]]
@@ -7485,13 +7442,6 @@ visvow <- function()
           col2 <- "yellow"
         }
         
-        if ((input$selProc5=="Adank et al. (2004) MANOVA") && (input$selEval52 == "all"))
-        {
-          df <- evalResults()[[8]]
-          col1 <- "turquoise"
-          col2 <- "yellow"
-        }
-  
         formattable(df, align = rep("l", 11), list(formattable::area() ~ color_tile(col1, col2)))
       })
 
