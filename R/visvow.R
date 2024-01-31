@@ -3436,15 +3436,33 @@ visvow <- function()
         if ((input$axisZ!="--") && (length(replyTimes1())<=1))
           tagList(splitLayout
           (
-            cellWidths = c("19%", "19%", "19%"),
+            cellWidths = c("19%", "19%"),
 
             checkboxInput("geon1", "labels", value = FALSE),
             checkboxInput("geon2", "lines" , value = TRUE )
           ))
         else
 
-        if (length(replyTimes1())> 2)
-          checkboxInput("geon1", "smooth trajectories", value = FALSE)
+        if ((input$axisZ=="--") & (length(replyTimes1())==2))
+          tagList(
+            checkboxInput("geon1", "labels" , value = FALSE)
+          )
+        else 
+          
+        if ((input$axisZ=="--") & (length(replyTimes1())> 2))
+          tagList(splitLayout
+          (
+            cellWidths = c("19%", "46%"),
+                      
+            checkboxInput("geon1", "labels" , value = FALSE),
+            checkboxInput("geon6", "smooth trajectories", value = FALSE)
+          ))
+        else
+          
+        if ((input$axisZ!="--") & (length(replyTimes1())>=2))
+          tagList(
+            checkboxInput("geon6", "smooth trajectories", value = FALSE)
+          )  
         else {}
       })
 
@@ -3853,6 +3871,9 @@ visvow <- function()
           vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
 
           if (input$geon1)
+            vTlab <- subset(vT, time==1)
+          
+          if ((length(input$geon6)>0) && (input$geon6))
           {
             xx <- c()
             yy <- c()
@@ -3894,7 +3915,12 @@ visvow <- function()
             Facet <- facet_null()
           }
 
-          if ((numColor()>0) & (numColor()<=18))
+          if (input$geon1)
+            Basis <- Basis + geom_text_repel(data=vTlab, position="identity", aes(x=X, y=Y, label=vowel), hjust=0.5, vjust=0.5, family=input$replyFont1b, size=5, alpha=1.0, max.overlaps=100)
+          else
+            geom_blank()
+          
+          if ((numColor()>0) & (numColor()<=18) & !input$geon1)
             Legend <- theme(legend.position="right")
           else
             Legend <- theme(legend.position="none")
@@ -4059,7 +4085,7 @@ visvow <- function()
         {
           vT <- vowelSub1()[order(vowelSub1()$index, vowelSub1()$time),]
 
-          if (input$geon1)
+          if (input$geon6)
           {
             xx <- c()
             yy <- c()
